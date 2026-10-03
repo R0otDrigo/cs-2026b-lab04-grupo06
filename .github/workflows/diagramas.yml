@@ -1,0 +1,87 @@
+name: Regenerar diagramas
+
+"on":
+  push:
+    branches: [main]
+    paths:
+      - 'docs/architecture/diagramas/**/*.mmd'
+      - '.github/workflows/diagramas.yml'
+  pull_request:
+    paths:
+      - 'docs/architecture/diagramas/**/*.mmd'
+      - '.github/workflows/diagramas.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: diagramas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mermaid:
+    name: Validar y regenerar PNG de Mermaid
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Obtener el codigo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar mermaid-cli
+        run: npm install -g @mermaid-js/mermaid-cli
+
+      - name: Preparar Puppeteer para CI
+        run: echo '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > puppeteer.json
+
+      - name: Validar sintaxis de los .mmd
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/validacion
+          encontrado=0
+          for mmd in docs/architecture/diagramas/*.mmd; do
+            [ -e "$mmd" ] || continue
+            encontrado=1
+            echo "Validando $mmd"
+            mmdc -i "$mmd" -o "/tmp/validacion/$(basename "${mmd%.mmd}").png" \
+              -p puppeteer.json -b white
+          done
+          if [ "$encontrado" -eq 0 ]; then
+            echo "No se encontro ningun archivo .mmd"
+            exit 1
+          fi
+          echo "Todos los .mmd son validos"
+
+      - name: Regenerar PNG
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          for mmd in docs/architecture/diagramas/*.mmd; do
+            [ -e "$mmd" ] || continue
+            mmdc -i "$mmd" \
+              -o "docs/architecture/diagramas/img/$(basename "${mmd%.mmd}").png" \
+              -p puppeteer.json -b white -s 2
+            echo "Regenerado $mmd"
+          done
+
+      - name: Commit si las imagenes cambiaron
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/architecture/diagramas/img/
+          if git diff --cached --quiet; then
+            echo "Las imagenes no cambiaron: no se crea commit."
+          else
+            git commit -m "CI: regenerar PNG de diagramas [skip ci]"
+            git push
+            echo "PNG regeneradas y publicadas."
+          fi
