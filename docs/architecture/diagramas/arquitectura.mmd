@@ -1,0 +1,28 @@
+flowchart TB
+    BU["Bus (GPS)"]
+    PA["Pasajero"]
+    OP["Operador"]
+    subgraph APP["RutaSIT — Monolito modular (un solo despliegue)"]
+        API["Capa de presentación: API REST + PWA"]
+        M1["Ingesta de<br/>posiciones"]
+        M2["Seguimiento<br/>y mapa"]
+        M3["Cálculo<br/>de ETA"]
+        M4["Alertas"]
+        M5["Rutas y<br/>paraderos"]
+        INF["Capa de infraestructura: repositorios y adaptadores externos"]
+    end
+    DB[("PostgreSQL + PostGIS<br/>(un esquema por módulo)")]
+    RD[("Redis<br/>(caché de posiciones y ETA)")]
+    MP["Proveedor de mapas OSM"]
+    BU & PA & OP --> API
+    API --> M1 & M2 & M3 & M4 & M5
+    M1 & M2 & M3 & M4 & M5 --> INF
+    INF --> DB
+    INF --> RD
+    INF --> MP
+    classDef mod fill:#E8F5E9,stroke:#2E7D32,color:#000
+    classDef ext fill:#F2F2F2,stroke:#7F7F7F,color:#000,stroke-dasharray: 4 3
+    classDef usr fill:#FDEDEC,stroke:#C8310E,color:#000
+    class M1,M2,M3,M4,M5 mod
+    class MP ext
+    class BU,PA,OP usr

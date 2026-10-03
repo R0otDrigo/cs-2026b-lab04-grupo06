@@ -1,0 +1,29 @@
+@startuml
+skinparam dpi 220
+skinparam componentStyle rectangle
+skinparam defaultFontName Arial
+skinparam backgroundColor white
+title Alternativa A (descartada): RutaSIT con monolito en capas
+actor "Pasajero / Operador" as U
+actor "Bus (GPS)" as B
+package "Monolito en capas" {
+  [Presentación\n(API REST + PWA)] as P
+  [Lógica de negocio\n(ingesta, ETA, alertas)] as L
+  [Acceso a datos] as D
+}
+database "PostgreSQL" as DB
+cloud "Proveedor de mapas OSM" as M
+U --> P
+B --> P
+P --> L
+L --> D
+D --> DB
+L ..> M
+note bottom of L
+  Puntaje 3,90 frente a 4,15 del monolito modular.
+  Ingesta, ETA y alertas comparten la misma capa
+  de negocio: modificabilidad 2/5 (QA-03) y cada
+  cambio puede afectar a las demás funciones.
+  Sin módulos ni caché dedicada, el rendimiento queda en 3/5.
+end note
+@enduml
