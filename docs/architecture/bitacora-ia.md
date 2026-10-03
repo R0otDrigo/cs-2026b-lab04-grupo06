@@ -1,0 +1,13 @@
+# Bitácora de uso de IA — RutaSIT Arequipa
+
+Registro de las interacciones reales del equipo con herramientas de IA durante el
+Laboratorio 04. Cada entrada corresponde a un prompt ejecutado y a la respuesta que la
+herramienta devolvió. Se documenta también qué verificamos y qué decidimos como equipo.
+
+| # | Fecha | Herramienta | Prompt (resumen) | Qué propuso la IA | Qué verificamos o corregimos | Decisión |
+|---|-------|-------------|------------------|-------------------|------------------------------|----------|
+| 1 | 02/10/2026 | Claude (Anthropic) | Prompt 1: generar 3 alternativas de estilo arquitectónico para RutaSIT con las restricciones del equipo. | Propuso tres alternativas: **A** monolito modular Django con polling, **B** monolito modular orientado a eventos (Redis + WebSocket/SSE) y **C** microservicios con broker MQTT/Kafka. Recomendó la **B**, con un plan en dos fases, argumentando que el canal persistente resuelve a la vez el ETA de ≤ 15 s y el consumo de datos del pasajero. | Contrastamos la recomendación contra los drivers. La opción B contradice **R-02**: el propio texto admite que el equipo "no domina el stack" async/ASGI, y comprometer R-01 (1 mes). También señalamos que la premisa central de B ("el canal persistente ahorra datos") no fue medida por la IA, sino asumida. Descartamos B y C; el equipo se quedó con un monolito modular con polling. | **Corregida** |
+| 2 | 02/10/2026 | Claude (Anthropic) | Prompt 2: crítica adversarial ("abogado del diablo") contra la alternativa recomendada en la entrada 1. | enumeró los supuestos que no se sostienen y 5 riesgos con mitigación: (1) la curva async/Channels consume el mes, (2) punto único de fallo y tormenta de reconexiones, (3) inestabilidad de conexiones en redes móviles, (4) incumplimiento del ETA bajo ráfagas y desorden, y (5) pérdida silenciosa de eventos por Pub/Sub. Añadió una mención aparte: las alertas pueden generar falsos positivos por ruido de GPS. **Cambió su propia recomendación** al cierre: "empezar con A optimizada y tratar B como una mejora condicionada". | La respuesta revoca explícitamente la entrada 1, por lo que la aceptamos como corrección válida. Adoptamos la recomendación revisada (polling con snapshot por ruta, ETag y compresión), que es la que quedó en [ADR-003](../adr/003-actualizacion-tiempo-real.md). Adoptamos las mitigaciones verificables: idempotencia por `timestamp`, marca de tiempo por etapa (recepción → ETA → entrega), snapshot completo más delta, y reintento con backoff y jitter. No adoptamos SSE/WebSocket para el MVP. | **Aceptada** |
+
+> Los prompts completos se incluyen en la sección "Anexo: prompts", al final de este
+> documento. No se incluye información personal ni confidencial en ningún prompt.
