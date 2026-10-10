@@ -1,0 +1,18 @@
+@startuml packages_rutasit
+set namespaceSeparator none
+package "rutasit" as rutasit {
+}
+package "rutasit.adaptadores" as rutasit.adaptadores {
+}
+package "rutasit.dominio" as rutasit.dominio {
+}
+package "rutasit.puertos" as rutasit.puertos {
+}
+package "rutasit.servicios" as rutasit.servicios {
+}
+rutasit.adaptadores --> rutasit.dominio
+rutasit.adaptadores --> rutasit.puertos
+rutasit.puertos --> rutasit.dominio
+rutasit.servicios --> rutasit.dominio
+rutasit.servicios --> rutasit.puertos
+@enduml
