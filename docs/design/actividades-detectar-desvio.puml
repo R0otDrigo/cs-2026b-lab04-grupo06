@@ -1,0 +1,38 @@
+@startuml actividades-detectar-desvio
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam ActivityBackgroundColor #EEF2F8
+skinparam ActivityBorderColor #1A3A5C
+|Bus (GPS)|
+start
+:Envía su posición cada 10 s;
+|Sistema|
+:Recibe y guarda la posición;
+:Compara la posición con el trazado de la ruta;
+if (¿Está a más de 150 m de la ruta?) then (sí)
+  if (¿También estaba fuera en la posición anterior?) then (sí)
+    :Marca el viaje como DESVIADO;
+    fork
+      :Crea la alerta para el operador;
+    fork again
+      :Muestra "bus desviado" en el mapa del pasajero;
+    end fork
+    |Operador|
+    :Revisa la alerta;
+    if (¿El desvío está autorizado?) then (sí)
+      :Registra el motivo;
+    else (no)
+      :Llama al conductor;
+    endif
+    |Sistema|
+    :Guarda cómo se atendió la alerta;
+    stop
+  else (no)
+    :Espera la siguiente posición;
+    stop
+  endif
+else (no)
+  :Mantiene el viaje EN_RUTA;
+  stop
+endif
+@enduml

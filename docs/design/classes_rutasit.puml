@@ -1,0 +1,79 @@
+@startuml classes_rutasit
+set namespaceSeparator none
+class "Bus" as rutasit.dominio.Bus {
+  id : UUID
+  placa : str
+}
+class "EstadoViaje" as rutasit.dominio.EstadoViaje {
+  name
+}
+class "Estimacion" as rutasit.dominio.Estimacion {
+  calculada_en : datetime
+  disponible : bool
+  minutos : int | None
+  paradero
+}
+class "OsmAdapter" as rutasit.adaptadores.OsmAdapter {
+  {abstract}tiempo_de_recorrido(desde: Posicion, hasta: Paradero) -> int
+}
+class "Paradero" as rutasit.dominio.Paradero {
+  id : UUID
+  latitud : float
+  longitud : float
+  nombre : str
+}
+class "Posicion" as rutasit.dominio.Posicion {
+  instante : datetime
+  latitud : float
+  longitud : float
+  velocidad_kmh : float
+}
+class "ProveedorMapas" as rutasit.puertos.ProveedorMapas {
+  {abstract}tiempo_de_recorrido(desde: Posicion, hasta: Paradero) -> int
+}
+class "RepositorioViajes" as rutasit.puertos.RepositorioViajes {
+  {abstract}buscar_activos_por_paradero(paradero: Paradero) -> list[Viaje]
+}
+class "Ruta" as rutasit.dominio.Ruta {
+  codigo : str
+  id : UUID
+  nombre : str
+  paraderos : list[Paradero]
+}
+class "ServicioAlertas" as rutasit.servicios.ServicioAlertas {
+  avisos : list[str]
+  avisar_desvio(v: Viaje) -> None
+  avisar_sin_senal(v: Viaje) -> None
+}
+class "ServicioEta" as rutasit.servicios.ServicioEta {
+  alertas
+  mapas
+  repositorio
+  consultar_eta(paradero: Paradero, ahora: datetime) -> Estimacion
+}
+class "Viaje" as rutasit.dominio.Viaje {
+  bus
+  estado
+  hora_salida : datetime
+  id : UUID
+  posiciones : list[Posicion]
+  ruta
+  esta_sin_senal(ahora: datetime) -> bool
+  finalizar() -> None
+  iniciar() -> None
+  marcar_desviado() -> None
+  marcar_detenido() -> None
+  programar() -> None
+  reanudar() -> None
+  registrar_posicion(p: Posicion) -> None
+  ultima_posicion() -> Posicion | None
+}
+rutasit.adaptadores.OsmAdapter --|> rutasit.puertos.ProveedorMapas
+rutasit.dominio.Viaje --> rutasit.dominio.Bus : bus
+rutasit.dominio.Viaje --> rutasit.dominio.EstadoViaje : estado
+rutasit.dominio.Estimacion --> rutasit.dominio.Paradero : paradero
+rutasit.dominio.Viaje --> rutasit.dominio.Ruta : ruta
+rutasit.puertos.ProveedorMapas --o rutasit.servicios.ServicioEta : mapas
+rutasit.puertos.RepositorioViajes --o rutasit.servicios.ServicioEta : repositorio
+rutasit.servicios.ServicioAlertas --o rutasit.servicios.ServicioEta : alertas
+@enduml
