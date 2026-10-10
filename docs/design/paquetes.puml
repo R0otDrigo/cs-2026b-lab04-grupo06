@@ -1,0 +1,33 @@
+@startuml paquetes
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam packageStyle rectangle
+skinparam ranksep 60
+skinparam nodesep 50
+title RutaSIT Arequipa — Paquetes del monolito modular (vista de desarrollo)
+package "rutasit" {
+  package "ingesta" as ING
+  package "seguimiento" as SEG
+  package "eta" as ETA
+  package "alertas" as ALE
+  package "rutas" as RUT
+  package "compartido" as COM
+}
+ING ..> SEG : registra posiciones\n(Viaje)
+ING ..> ALE : avisa desvíos\n(ServicioAlertas)
+ETA ..> SEG : usa Viaje y\nRepositorioViajes
+ETA ..> RUT : usa Paradero
+ETA ..> ALE : avisa sin señal\n(ServicioAlertas)
+ALE ..> SEG : lee Viaje
+SEG ..> RUT : usa Ruta
+ING ..> COM
+SEG ..> COM
+ETA ..> COM
+ALE ..> COM
+RUT ..> COM
+note bottom of ALE
+  Regla (ADR-001): sin dependencias cíclicas.
+  seguimiento NO depende de alertas;
+  ingesta es quien coordina a los dos.
+end note
+@enduml
