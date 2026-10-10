@@ -1,0 +1,14 @@
+stateDiagram-v2
+    [*] --> PROGRAMADO : programar()
+    PROGRAMADO --> EN_RUTA : iniciar() [hora de salida cumplida]
+    EN_RUTA --> DESVIADO : marcarDesviado() [a mas de 150 m de la ruta]
+    DESVIADO --> EN_RUTA : reanudar() [vuelve a la ruta]
+    EN_RUTA --> DETENIDO : marcarDetenido() [velocidad 0 por mas de 3 min]
+    DETENIDO --> EN_RUTA : reanudar() [velocidad mayor a 0]
+    EN_RUTA --> FINALIZADO : finalizar() [llego al ultimo paradero]
+    DESVIADO --> FINALIZADO : finalizar() [el operador cierra el viaje]
+    DETENIDO --> FINALIZADO : finalizar() [el operador cierra el viaje]
+    FINALIZADO --> [*]
+    note right of DESVIADO
+        Al entrar: avisar al operador
+    end note
