@@ -1,0 +1,86 @@
+@startuml clases-eta
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title RutaSIT Arequipa — Consulta del tiempo de llegada (diseño)
+skinparam nodesep 25
+skinparam ranksep 40
+
+class Ruta {
+  - id: UUID
+  - codigo: String
+  - nombre: String
+}
+class Paradero {
+  - id: UUID
+  - nombre: String
+  - latitud: double
+  - longitud: double
+}
+class Bus {
+  - id: UUID
+  - placa: String
+}
+class Viaje {
+  - id: UUID
+  - estado: EstadoViaje
+  - horaSalida: DateTime
+  + programar(): void
+  + iniciar(): void
+  + registrarPosicion(p: Posicion): void
+  + ultimaPosicion(): Posicion
+  + estaSinSenal(ahora: DateTime): bool
+  + marcarDesviado(): void
+  + marcarDetenido(): void
+  + reanudar(): void
+  + finalizar(): void
+}
+class Posicion {
+  - latitud: double
+  - longitud: double
+  - instante: DateTime
+  - velocidadKmh: double
+}
+class Estimacion {
+  - minutos: int
+  - calculadaEn: DateTime
+  - disponible: bool
+}
+enum EstadoViaje {
+  PROGRAMADO
+  EN_RUTA
+  DESVIADO
+  DETENIDO
+  FINALIZADO
+}
+class ServicioEta <<servicio>> {
+  + consultarEta(paradero: Paradero, ahora: DateTime): Estimacion
+}
+class ServicioAlertas <<servicio>> {
+  + avisarSinSenal(v: Viaje): void
+  + avisarDesvio(v: Viaje): void
+}
+interface ProveedorMapas <<puerto>> {
+  + tiempoDeRecorrido(desde: Posicion, hasta: Paradero): int
+}
+interface RepositorioViajes <<puerto>> {
+  + buscarActivosPorParadero(paradero: Paradero): List<Viaje>
+}
+class OsmAdapter <<adaptador>>
+
+Ruta "1..*" -- "2..*" Paradero : recorre >
+Bus "1" -- "0..*" Viaje : realiza >
+Viaje "0..*" -- "1" Ruta : sigue >
+Viaje "1" *-- "0..*" Posicion : registra >
+Viaje --> EstadoViaje
+Estimacion "0..*" --> "1" Paradero : es para >
+ProveedorMapas <|.. OsmAdapter
+ServicioEta ..> Estimacion
+ServicioEta ..> RepositorioViajes
+ServicioEta ..> ProveedorMapas
+ServicioEta ..> ServicioAlertas
+ServicioAlertas ..> Viaje
+RepositorioViajes ..> Viaje
+@enduml
