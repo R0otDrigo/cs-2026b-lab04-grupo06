@@ -92,3 +92,32 @@ externa. En resumen, nos sirvió como generador de alternativas y de estructura,
 recomendación tuvo que filtrarse contra nuestras restricciones, y los tres casos de
 desviación fueron distintos: sobrearquitectura, diagramas que rompen una decisión ya tomada,
 y datos inventados con apariencia de certeza.
+
+## Diseño UML (Lab 05)
+
+Diseño detallado del módulo de seguimiento y tiempo de llegada (historia HU-01).
+
+### Máquina de estados de Viaje
+```mermaid
+stateDiagram-v2
+    [*] --> PROGRAMADO : programar()
+    PROGRAMADO --> EN_RUTA : iniciar() [hora de salida cumplida]
+    EN_RUTA --> DESVIADO : marcarDesviado() [a mas de 150 m de la ruta]
+    DESVIADO --> EN_RUTA : reanudar() [vuelve a la ruta]
+    EN_RUTA --> DETENIDO : marcarDetenido() [velocidad 0 por mas de 3 min]
+    DETENIDO --> EN_RUTA : reanudar() [velocidad mayor a 0]
+    EN_RUTA --> FINALIZADO : finalizar() [llego al ultimo paradero]
+    DESVIADO --> FINALIZADO : finalizar() [el operador cierra el viaje]
+    DETENIDO --> FINALIZADO : finalizar() [el operador cierra el viaje]
+    FINALIZADO --> [*]
+```
+
+### Documentos y diagramas
+- [Historia de usuario](docs/design/historia.md)
+- [Diagrama de clases](docs/design/clases.puml) · [imagen](docs/design/img/clases-eta.png)
+- [Diagrama de secuencia](docs/design/secuencia-consultar-eta.puml) · [imagen](docs/design/img/secuencia-consultar-eta.png)
+- [Máquina de estados](docs/design/estados-viaje.mmd) · [imagen](docs/design/img/estados-viaje.png)
+- [Diagrama de actividades](docs/design/actividades-detectar-desvio.puml) · [imagen](docs/design/img/actividades-detectar-desvio.png)
+- [Diagrama de paquetes](docs/design/paquetes.puml) · [imagen](docs/design/img/paquetes.png)
+- [Round-trip](docs/design/round-trip.md) · [Consistencia](docs/design/consistencia.md) · [Bitácora de IA](docs/design/bitacora-ia.md)
+- [ADR-004](docs/architecture/adr/004-ingesta-coordina-seguimiento-y-alertas.md)

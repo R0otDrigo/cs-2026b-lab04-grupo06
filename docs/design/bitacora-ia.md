@@ -1,0 +1,11 @@
+# Bitácora de IA — Laboratorio 05 · RutaSIT Arequipa
+
+| # | Fecha | Herramienta | Prompt (resumen) | Qué propuso la IA | Qué verificamos o corregimos | Decisión |
+|---|-------|-------------|------------------|-------------------|------------------------------|----------|
+| 1 | 10/10/2026 | Claude | Prompt IA 1 adaptado: diagrama de clases de RutaSIT con la historia HU-01 y el ADR-001. | 12 elementos: 8 clases, 2 puertos (ProveedorMapas y RepositorioViajes), 1 enumeración y 1 adaptador. | `consultarEta` recibía solo el id del paradero, pero el proveedor de mapas necesita sus coordenadas: se cambió a recibir el `Paradero`. Se agregaron `ultimaPosicion()` y `estaSinSenal()` a Viaje, que la secuencia necesitaba. No hay clase Pasajero, porque R-05 pide no guardar datos personales. | Corregida |
+| 2 | 10/10/2026 | Claude | Diagrama de secuencia de "consultar la llegada" con alt, loop y mensaje asíncrono. | 7 líneas de vida, un loop por cada viaje activo, un alt (con señal / sin señal) y un aviso asíncrono a Alertas. | Regla C1 con el script: los 6 mensajes hacia objetos del dominio existen como operación. Se revisó que el alt cubra el criterio de error de la historia (sin señal). | Aceptada |
+| 3 | 10/10/2026 | Claude | Máquina de estados de Viaje en Mermaid (5 estados, guardas, inicial y final). | 9 transiciones con operación y guarda. | Se renderizó con mermaid-cli sin errores. Regla C2: las 9 transiciones son operaciones de Viaje y los estados coinciden con la enumeración. Cada transición tiene una prueba. | Aceptada |
+| 4 | 10/10/2026 | Claude | Prompt IA 2: esqueleto en Python 3.10 del diagrama de clases (ingeniería directa). | `dominio.py`, `puertos.py`, `adaptadores.py` y `servicios.py` con dataclasses, ABC y `OsmAdapter` que lanza NotImplementedError. | Se ejecutaron 13 pruebas (todas pasan). Se corrió pyreverse y se anotaron 6 diferencias en `round-trip.md`. Se agregó la validación de 2 o más paraderos en Ruta (C3). | Corregida |
+| 5 | 10/10/2026 | Claude | Prompt IA 3 adaptado: revisar consistencia C1–C5 de los cinco diagramas. | Un script (`verificar_consistencia.py`) que revisa C1, C2, C4 y C5. | C1, C2 y C4 sin problemas. En C5 marcó 10 nombres como distintos: es un falso positivo, porque snake_case es la convención de Python. | Corregida |
+
+> No se incluyó información personal ni confidencial en ningún prompt.
