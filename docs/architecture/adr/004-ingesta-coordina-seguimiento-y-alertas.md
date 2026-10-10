@@ -2,7 +2,7 @@
 
 - Estado: Aceptado
 - Fecha: 2026-10-10
-- Decisores: Rodrigo Estefanero, Mauro Sullca y Alberth Riveros
+- Decisores: Estefanero Palma Rodrigo, Sullca Mamani Mauro Snayder y Riveros Vilca Alberth Edwar
 
 ## Contexto
 Al dibujar el diagrama de paquetes (Lab 05, E5) vimos que Seguimiento necesitaba avisar a Alertas
