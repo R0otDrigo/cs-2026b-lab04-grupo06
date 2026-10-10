@@ -1,0 +1,38 @@
+@startuml secuencia-consultar-eta
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam sequenceMessageAlign center
+autonumber
+actor Pasajero
+participant "PWA" as UI
+participant "EtaController" as C
+participant "ServicioEta" as S
+participant "RepositorioViajes" as R
+participant "Viaje" as V
+participant "ProveedorMapas\n(OsmAdapter)" as G
+participant "ServicioAlertas" as A
+
+Pasajero -> UI : Consultar llegada al paradero
+UI -> C : GET /paraderos/{id}/eta
+C -> S : consultarEta(paradero, ahora)
+S -> R : buscarActivosPorParadero(paradero)
+R --> S : viajes
+loop por cada viaje activo
+  S -> V : ultimaPosicion()
+  V --> S : posicion
+  S -> V : estaSinSenal(ahora)
+  V --> S : sinSenal
+end
+alt hay un viaje con señal
+  S -> G : tiempoDeRecorrido(posicion, paradero)
+  G --> S : minutos
+  S --> C : estimacion (disponible)
+  C --> UI : 200 OK con minutos
+else todos los viajes sin señal
+  S ->> A : avisarSinSenal(viaje)
+  note right of A : asíncrono\n(no bloquea la respuesta)
+  S --> C : estimacion (no disponible)
+  C --> UI : 200 OK "ETA no disponible"
+end
+UI --> Pasajero : Muestra el resultado
+@enduml
