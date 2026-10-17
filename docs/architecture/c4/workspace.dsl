@@ -54,6 +54,28 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
         rutasit.api.ingesta -> rutasit.cache "Guarda la última posición" "Redis protocol"
         rutasit.api.eta -> rutasit.cache "Guarda y lee tiempos de llegada" "Redis protocol"
         rutasit.api.eta -> mapas "Pide el tiempo de recorrido" "HTTPS/JSON"
+
+        produccion = deploymentEnvironment "Producción" {
+            celular = deploymentNode "Celular o PC del usuario" "" "Android / navegador web" {
+                pwaInstancia = containerInstance rutasit.pwa
+            }
+            vps = deploymentNode "VPS en la nube" "" "Ubuntu 24.04, 2 vCPU, 4 GB RAM" {
+                proxy = infrastructureNode "Nginx" "Recibe las peticiones y aplica HTTPS." "Nginx"
+                monitoreo = infrastructureNode "Grafana" "Muestra el estado del servidor y de la aplicación." "Grafana"
+                servidorApp = deploymentNode "Servidor de aplicación" "" "Django" {
+                    apiInstancia = containerInstance rutasit.api
+                }
+                servidorBd = deploymentNode "Servidor de base de datos" "" "PostgreSQL + PostGIS" {
+                    dbInstancia = containerInstance rutasit.db
+                }
+                servidorCache = deploymentNode "Servidor de caché" "" "Redis" {
+                    cacheInstancia = containerInstance rutasit.cache
+                }
+            }
+            celular.pwaInstancia -> vps.proxy "Envía las consultas" "HTTPS"
+            vps.proxy -> vps.servidorApp.apiInstancia "Reenvía las peticiones" "HTTP"
+            vps.servidorApp.apiInstancia -> vps.monitoreo "Envía métricas" "HTTP"
+        }
     }
 
     views {
@@ -75,6 +97,10 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
             rutasit.api.eta -> mapas "Pide el tiempo de recorrido"
             rutasit.api.eta -> rutasit.api.alertas "Avisa si los buses no tienen señal"
             rutasit.api.eta -> rutasit.cache "Guarda el tiempo calculado"
+            autolayout lr
+        }
+        deployment rutasit produccion "Despliegue" "Despliegue en producción (MVP)." {
+            include *
             autolayout lr
         }
 
