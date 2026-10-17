@@ -69,6 +69,14 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
             include *
             autolayout lr
         }
+        dynamic rutasit.api "ConsultarLlegada" "Dinámico: el pasajero consulta cuándo llega el bus a su paradero." {
+            rutasit.pwa -> rutasit.api.eta "Consulta el tiempo de llegada"
+            rutasit.api.eta -> rutasit.api.seguimiento "Busca los viajes activos y su última posición"
+            rutasit.api.eta -> mapas "Pide el tiempo de recorrido"
+            rutasit.api.eta -> rutasit.api.alertas "Avisa si los buses no tienen señal"
+            rutasit.api.eta -> rutasit.cache "Guarda el tiempo calculado"
+            autolayout lr
+        }
 
         styles {
             element "Person" {
