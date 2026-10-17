@@ -1,0 +1,58 @@
+@startuml
+title <size:24>Component View: RutaSIT - API RutaSIT</size>\n<size:24>Nivel 3: módulos de la API.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+System(DispositivosGPSdelosbuses, "Dispositivos GPS de los buses", $descr="Envían la posición de cada bus cada 10 segundos.", $tags="", $link="")
+System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
+
+System_Boundary("RutaSIT_boundary", "RutaSIT", $tags="") {
+  Container_Boundary("RutaSIT.APIRutaSIT_boundary", "API RutaSIT", $tags="") {
+    Component(RutaSIT.APIRutaSIT.MóduloETA, "Módulo ETA", $techn="Django app", $descr="Calcula el tiempo de llegada a cada paradero.", $tags="", $link="")
+    Component(RutaSIT.APIRutaSIT.MóduloAlertas, "Módulo Alertas", $techn="Django app", $descr="Avisa al operador de desvíos y de buses sin señal.", $tags="", $link="")
+    Component(RutaSIT.APIRutaSIT.MóduloRutas, "Módulo Rutas", $techn="Django app", $descr="Administra las rutas y los paraderos.", $tags="", $link="")
+    Component(RutaSIT.APIRutaSIT.MóduloIngesta, "Módulo Ingesta", $techn="Django app", $descr="Recibe la posición que envía cada bus.", $tags="", $link="")
+    Component(RutaSIT.APIRutaSIT.MóduloSeguimiento, "Módulo Seguimiento", $techn="Django app", $descr="Guarda los viajes y sus posiciones y controla su estado.", $tags="", $link="")
+  }
+
+  ContainerDb(RutaSIT.Basededatos, "Base de datos", $techn="PostgreSQL + PostGIS", $descr="Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo).", $tags="", $link="")
+  ContainerDb(RutaSIT.Caché, "Caché", $techn="Redis", $descr="Última posición de cada bus y tiempos de llegada ya calculados.", $tags="", $link="")
+  Container(RutaSIT.Aplicaciónwebprogresiva, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
+}
+
+Rel(RutaSIT.Aplicaciónwebprogresiva, Proveedordemapas, "Carga los mapas", $techn="HTTPS", $tags="", $link="")
+Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Consulta la posición de los buses", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloETA, "Consulta el tiempo de llegada", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloRutas, "Consulta rutas y paraderos", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloAlertas, "Consulta las alertas (operador)", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(DispositivosGPSdelosbuses, RutaSIT.APIRutaSIT.MóduloIngesta, "Envía su posición", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Registra la posición del viaje", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.APIRutaSIT.MóduloAlertas, "Avisa si hay un desvío", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Busca los viajes activos y su última posición", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloRutas, "Lee los paraderos", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloAlertas, "Avisa si los buses no tienen señal", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloAlertas, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Lee los viajes", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloSeguimiento, RutaSIT.APIRutaSIT.MóduloRutas, "Usa la ruta del viaje", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloSeguimiento, RutaSIT.Basededatos, "Lee y guarda viajes y posiciones", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloRutas, RutaSIT.Basededatos, "Lee y guarda rutas y paraderos", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloAlertas, RutaSIT.Basededatos, "Guarda las alertas", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.Caché, "Guarda la última posición", $techn="Redis protocol", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.Caché, "Guarda y lee tiempos de llegada", $techn="Redis protocol", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, Proveedordemapas, "Pide el tiempo de recorrido", $techn="HTTPS/JSON", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

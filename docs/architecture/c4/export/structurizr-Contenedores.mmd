@@ -1,0 +1,38 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["Container View: RutaSIT"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Persona que consulta dónde<br />está su bus y cuánto demora<br />en llegar.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Operador</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Personal del SIT que<br />supervisa los buses y atiende<br />las alertas.</div>"]
+    style 2 fill:#08427b,stroke:#052e56,color:#ffffff
+    3["<div style='font-weight: bold'>Dispositivos GPS de los buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Envían la posición de cada<br />bus cada 10 segundos.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+
+    subgraph 5 ["RutaSIT"]
+      style 5 fill:#ffffff,stroke:#0b4884,color:#0b4884
+
+      13[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo).</div>")]
+      style 13 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      14[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
+      style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      6["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
+      style 6 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      7["<div style='font-weight: bold'>API RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python / Django]</div><div style='font-size: 80%; margin-top:10px'>Monolito modular que recibe<br />posiciones, calcula tiempos<br />de llegada y genera alertas.</div>"]
+      style 7 fill:#438dd5,stroke:#2e6295,color:#ffffff
+    end
+
+    1-. "<div>Usa</div><div style='font-size: 70%'>[HTTPS]</div>" .->6
+    2-. "<div>Usa</div><div style='font-size: 70%'>[HTTPS]</div>" .->6
+    6-. "<div>Hace consultas</div><div style='font-size: 70%'>[HTTPS/JSON (REST)]</div>" .->7
+    3-. "<div>Envía su posición</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->7
+    7-. "<div>Lee y guarda viajes,<br />posiciones y alertas</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->13
+    7-. "<div>Guarda y lee posiciones y<br />tiempos de llegada</div><div style='font-size: 70%'>[Redis protocol]</div>" .->14
+    6-. "<div>Carga los mapas</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
+    7-. "<div>Pide el tiempo de recorrido</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
+
+  end
