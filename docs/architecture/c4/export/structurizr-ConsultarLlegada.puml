@@ -1,0 +1,44 @@
+@startuml
+title <size:24>Dynamic View: RutaSIT - API RutaSIT</size>\n<size:24>Dinámico: el pasajero consulta cuándo llega el bus a su paradero.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Component>
+
+System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
+
+System_Boundary("RutaSIT_boundary", "RutaSIT", $tags="") {
+  Container_Boundary("RutaSIT.APIRutaSIT_boundary", "API RutaSIT", $tags="") {
+    Component(RutaSIT.APIRutaSIT.MóduloETA, "Módulo ETA", $techn="Django app", $descr="Calcula el tiempo de llegada a cada paradero.", $tags="", $link="")
+    Component(RutaSIT.APIRutaSIT.MóduloAlertas, "Módulo Alertas", $techn="Django app", $descr="Avisa al operador de desvíos y de buses sin señal.", $tags="", $link="")
+    Component(RutaSIT.APIRutaSIT.MóduloSeguimiento, "Módulo Seguimiento", $techn="Django app", $descr="Guarda los viajes y sus posiciones y controla su estado.", $tags="", $link="")
+  }
+
+  ContainerDb(RutaSIT.Caché, "Caché", $techn="Redis", $descr="Última posición de cada bus y tiempos de llegada ya calculados.", $tags="", $link="")
+  Container(RutaSIT.Aplicaciónwebprogresiva, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
+}
+
+System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
+Container(RutaSIT.Aplicaciónwebprogresiva, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
+ContainerDb(RutaSIT.Caché, "Caché", $techn="Redis", $descr="Última posición de cada bus y tiempos de llegada ya calculados.", $tags="", $link="")
+
+Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloETA, "1: Consulta el tiempo de llegada", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloSeguimiento, "2: Busca los viajes activos y su última posición", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, Proveedordemapas, "3: Pide el tiempo de recorrido", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloAlertas, "4: Avisa si los buses no tienen señal", $techn="Python (llamada interna)", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.Caché, "5: Guarda el tiempo calculado", $techn="Redis protocol", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

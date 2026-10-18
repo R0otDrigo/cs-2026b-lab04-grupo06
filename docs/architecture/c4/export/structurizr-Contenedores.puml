@@ -1,0 +1,41 @@
+@startuml
+title <size:24>Container View: RutaSIT</size>\n<size:24>Nivel 2: contenedores de RutaSIT.</size>
+
+set separator none
+left to right direction
+
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+
+Person(Pasajero, "Pasajero", $descr="Persona que consulta dónde está su bus y cuánto demora en llegar.", $tags="", $link="")
+Person(Operador, "Operador", $descr="Personal del SIT que supervisa los buses y atiende las alertas.", $tags="", $link="")
+System(DispositivosGPSdelosbuses, "Dispositivos GPS de los buses", $descr="Envían la posición de cada bus cada 10 segundos.", $tags="", $link="")
+System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
+
+System_Boundary("RutaSIT_boundary", "RutaSIT", $tags="") {
+  ContainerDb(RutaSIT.Basededatos, "Base de datos", $techn="PostgreSQL + PostGIS", $descr="Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo).", $tags="", $link="")
+  ContainerDb(RutaSIT.Caché, "Caché", $techn="Redis", $descr="Última posición de cada bus y tiempos de llegada ya calculados.", $tags="", $link="")
+  Container(RutaSIT.Aplicaciónwebprogresiva, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
+  Container(RutaSIT.APIRutaSIT, "API RutaSIT", $techn="Python / Django", $descr="Monolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas.", $tags="", $link="")
+}
+
+Rel(Pasajero, RutaSIT.Aplicaciónwebprogresiva, "Usa", $techn="HTTPS", $tags="", $link="")
+Rel(Operador, RutaSIT.Aplicaciónwebprogresiva, "Usa", $techn="HTTPS", $tags="", $link="")
+Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT, "Hace consultas", $techn="HTTPS/JSON (REST)", $tags="", $link="")
+Rel(DispositivosGPSdelosbuses, RutaSIT.APIRutaSIT, "Envía su posición", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT, RutaSIT.Basededatos, "Lee y guarda viajes, posiciones y alertas", $techn="SQL/TCP", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT, RutaSIT.Caché, "Guarda y lee posiciones y tiempos de llegada", $techn="Redis protocol", $tags="", $link="")
+Rel(RutaSIT.Aplicaciónwebprogresiva, Proveedordemapas, "Carga los mapas", $techn="HTTPS", $tags="", $link="")
+Rel(RutaSIT.APIRutaSIT, Proveedordemapas, "Pide el tiempo de recorrido", $techn="HTTPS/JSON", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
+@enduml

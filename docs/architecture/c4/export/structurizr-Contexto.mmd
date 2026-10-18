@@ -1,0 +1,23 @@
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["System Context View: RutaSIT"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Persona que consulta dónde<br />está su bus y cuánto demora<br />en llegar.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Operador</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Personal del SIT que<br />supervisa los buses y atiende<br />las alertas.</div>"]
+    style 2 fill:#08427b,stroke:#052e56,color:#ffffff
+    3["<div style='font-weight: bold'>Dispositivos GPS de los buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Envían la posición de cada<br />bus cada 10 segundos.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    5["<div style='font-weight: bold'>RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Muestra la ubicación de los<br />buses y el tiempo de llegada<br />a cada paradero.</div>"]
+    style 5 fill:#1168bd,stroke:#0b4884,color:#ffffff
+
+    1-. "<div>Consulta dónde está su bus y<br />cuánto demora en llegar</div><div style='font-size: 70%'></div>" .->5
+    2-. "<div>Supervisa los buses y atiende<br />las alertas</div><div style='font-size: 70%'></div>" .->5
+    3-. "<div>Envía la posición del bus</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->5
+    5-. "<div>Pide mapas y tiempos de<br />recorrido</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
+
+  end
