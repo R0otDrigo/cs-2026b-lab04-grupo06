@@ -88,7 +88,9 @@ jobs:
       - name: Regenerar imágenes C4 de PlantUML
         run: |
           set -euo pipefail
+          mkdir -p docs/architecture/c4/img
           docker run --rm \
+            --user "$(id -u):$(id -g)" \
             -v "$GITHUB_WORKSPACE:/workspace" \
             plantuml/plantuml:1.2026.9 \
             -tpng -o /workspace/docs/architecture/c4/img \
