@@ -1,7 +1,7 @@
 graph LR
   linkStyle default fill:#ffffff
 
-  subgraph diagram ["Container View: RutaSIT"]
+  subgraph diagram [RutaSIT - Containers]
     style diagram fill:#ffffff,stroke:#ffffff
 
     1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Persona que consulta dónde<br />está su bus y cuánto demora<br />en llegar.</div>"]
@@ -13,7 +13,7 @@ graph LR
     4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
     style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
 
-    subgraph 5 ["RutaSIT"]
+    subgraph 5 [RutaSIT]
       style 5 fill:#ffffff,stroke:#0b4884,color:#0b4884
 
       13[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo).</div>")]
@@ -34,5 +34,4 @@ graph LR
     7-. "<div>Guarda y lee posiciones y<br />tiempos de llegada</div><div style='font-size: 70%'>[Redis protocol]</div>" .->14
     6-. "<div>Carga los mapas</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
     7-. "<div>Pide el tiempo de recorrido</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
-
   end

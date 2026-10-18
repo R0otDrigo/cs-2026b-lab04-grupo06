@@ -1,39 +1,39 @@
 graph LR
   linkStyle default fill:#ffffff
 
-  subgraph diagram ["Deployment View: RutaSIT - Producción"]
+  subgraph diagram [RutaSIT - Deployment - Producción]
     style diagram fill:#ffffff,stroke:#ffffff
 
-    subgraph 45 ["Celular o PC del usuario"]
-      style 45 fill:#ffffff,stroke:#444444,color:#444444
+    subgraph 45 [Celular o PC del usuario]
+      style 45 fill:#ffffff,stroke:#888888,color:#000000
 
       46["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
       style 46 fill:#438dd5,stroke:#2e6295,color:#ffffff
     end
 
-    subgraph 47 ["VPS en la nube"]
-      style 47 fill:#ffffff,stroke:#444444,color:#444444
+    subgraph 47 [VPS en la nube]
+      style 47 fill:#ffffff,stroke:#888888,color:#000000
 
       48["<div style='font-weight: bold'>Nginx</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: Nginx]</div><div style='font-size: 80%; margin-top:10px'>Recibe las peticiones y<br />aplica HTTPS.</div>"]
-      style 48 fill:#ffffff,stroke:#444444,color:#444444
+      style 48 fill:#dddddd,stroke:#9a9a9a,color:#000000
       49["<div style='font-weight: bold'>Grafana</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: Grafana]</div><div style='font-size: 80%; margin-top:10px'>Muestra el estado del<br />servidor y de la aplicación.</div>"]
-      style 49 fill:#ffffff,stroke:#444444,color:#444444
-      subgraph 50 ["Servidor de aplicación"]
-        style 50 fill:#ffffff,stroke:#444444,color:#444444
+      style 49 fill:#dddddd,stroke:#9a9a9a,color:#000000
+      subgraph 50 [Servidor de aplicación]
+        style 50 fill:#ffffff,stroke:#888888,color:#000000
 
         51["<div style='font-weight: bold'>API RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python / Django]</div><div style='font-size: 80%; margin-top:10px'>Monolito modular que recibe<br />posiciones, calcula tiempos<br />de llegada y genera alertas.</div>"]
         style 51 fill:#438dd5,stroke:#2e6295,color:#ffffff
       end
 
-      subgraph 53 ["Servidor de base de datos"]
-        style 53 fill:#ffffff,stroke:#444444,color:#444444
+      subgraph 53 [Servidor de base de datos]
+        style 53 fill:#ffffff,stroke:#888888,color:#000000
 
         54[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo).</div>")]
         style 54 fill:#438dd5,stroke:#2e6295,color:#ffffff
       end
 
-      subgraph 56 ["Servidor de caché"]
-        style 56 fill:#ffffff,stroke:#444444,color:#444444
+      subgraph 56 [Servidor de caché]
+        style 56 fill:#ffffff,stroke:#888888,color:#000000
 
         57[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
         style 57 fill:#438dd5,stroke:#2e6295,color:#ffffff
@@ -47,5 +47,4 @@ graph LR
     46-. "<div>Envía las consultas</div><div style='font-size: 70%'>[HTTPS]</div>" .->48
     48-. "<div>Reenvía las peticiones</div><div style='font-size: 70%'>[HTTP]</div>" .->51
     51-. "<div>Envía métricas</div><div style='font-size: 70%'>[HTTP]</div>" .->49
-
   end

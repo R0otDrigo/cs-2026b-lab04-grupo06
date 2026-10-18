@@ -1,43 +1,30 @@
 graph LR
   linkStyle default fill:#ffffff
 
-  subgraph diagram ["Dynamic View: RutaSIT - API RutaSIT"]
+  subgraph diagram [API RutaSIT - Dynamic]
     style diagram fill:#ffffff,stroke:#ffffff
 
-    4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
-    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    subgraph 7 [API RutaSIT]
+      style 7 fill:#ffffff,stroke:#2e6295,color:#2e6295
 
-    subgraph 5 ["RutaSIT"]
-      style 5 fill:#ffffff,stroke:#0b4884,color:#0b4884
-
-      subgraph 7 ["API RutaSIT"]
-        style 7 fill:#ffffff,stroke:#2e6295,color:#2e6295
-
-        10["<div style='font-weight: bold'>Módulo ETA</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Calcula el tiempo de llegada<br />a cada paradero.</div>"]
-        style 10 fill:#85bbf0,stroke:#5d82a8,color:#000000
-        11["<div style='font-weight: bold'>Módulo Alertas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Avisa al operador de desvíos<br />y de buses sin señal.</div>"]
-        style 11 fill:#85bbf0,stroke:#5d82a8,color:#000000
-        9["<div style='font-weight: bold'>Módulo Seguimiento</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Guarda los viajes y sus<br />posiciones y controla su<br />estado.</div>"]
-        style 9 fill:#85bbf0,stroke:#5d82a8,color:#000000
-      end
-
-      14[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
-      style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
-      6["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
-      style 6 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      10["<div style='font-weight: bold'>Módulo ETA</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Calcula el tiempo de llegada<br />a cada paradero.</div>"]
+      style 10 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      11["<div style='font-weight: bold'>Módulo Alertas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Avisa al operador de desvíos<br />y de buses sin señal.</div>"]
+      style 11 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      9["<div style='font-weight: bold'>Módulo Seguimiento</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Guarda los viajes y sus<br />posiciones y controla su<br />estado.</div>"]
+      style 9 fill:#85bbf0,stroke:#5d82a8,color:#000000
     end
 
+    14[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
+    style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
     4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
     style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
     6["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
     style 6 fill:#438dd5,stroke:#2e6295,color:#ffffff
-    14[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
-    style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
 
     6-. "<div>1. Consulta el tiempo de<br />llegada</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->10
     10-. "<div>2. Busca los viajes activos y<br />su última posición</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->9
     10-. "<div>3. Pide el tiempo de<br />recorrido</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
     10-. "<div>4. Avisa si los buses no<br />tienen señal</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->11
     10-. "<div>5. Guarda el tiempo calculado</div><div style='font-size: 70%'>[Redis protocol]</div>" .->14
-
   end
