@@ -72,7 +72,15 @@ M5 = RF-05.
 
 - [Drivers y escenarios de calidad](docs/architecture/drivers.md) — RF, atributos de calidad, restricciones y escenarios QA
 - [Matriz de decisión](docs/architecture/matriz-decision.md) — alternativas, pesos y cálculo ponderado
-- [Bitácora de uso de IA](docs/architecture/bitacora-ia.md) — 5 interacciones reales con Claude, DeepSeek, ChatGPT y Gemini
+- [Bitácora de uso de IA](docs/architecture/bitacora-ia.md) — interacciones y decisiones verificadas durante los laboratorios
+
+### Reto opcional B: documentación viva de diagramas
+
+La [Action de diagramas](.github/workflows/diagramas.yml) se ejecuta en cada push y
+pull request. Valida `docs/architecture/c4/workspace.dsl`, vuelve a exportar las cinco
+vistas a PlantUML y Mermaid y regenera sus PNG en `docs/architecture/c4/img/`. Si la
+validación o el render falla, la ejecución queda fallida; en pushes, la Action publica
+los artefactos generados cuando detecta cambios.
 
 ## Reflexión sobre el uso de la IA
 

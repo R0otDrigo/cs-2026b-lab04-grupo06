@@ -1,27 +1,20 @@
-name: Regenerar diagramas
+name: Validar y regenerar diagramas
 
 "on":
   push:
-    branches: [main]
-    paths:
-      - 'docs/architecture/diagramas/**/*.mmd'
-      - '.github/workflows/diagramas.yml'
   pull_request:
-    paths:
-      - 'docs/architecture/diagramas/**/*.mmd'
-      - '.github/workflows/diagramas.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: diagramas-${{ github.ref }}
+  group: arquitectura-diagramas-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   mermaid:
-    name: Validar y regenerar PNG de Mermaid
+    name: Validar workspace C4 y regenerar vistas
     runs-on: ubuntu-latest
 
     steps:
@@ -40,6 +33,81 @@ jobs:
 
       - name: Preparar Puppeteer para CI
         run: echo '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > puppeteer.json
+
+      - name: Validar workspace C4
+        run: |
+          set -euo pipefail
+          workspace="docs/architecture/c4/workspace.dsl"
+          test -f "$workspace"
+          if ! output="$(docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            structurizr/cli:1.31.0 \
+            validate -workspace "/workspace/$workspace" 2>&1)"; then
+            printf '%s\n' "$output"
+            exit 1
+          fi
+          if [ -n "$output" ]; then
+            printf '%s\n' "$output"
+            echo "::error::Structurizr encontró errores en $workspace"
+            exit 1
+          fi
+          echo "Workspace C4 válido: $workspace"
+
+      - name: Exportar las vistas C4
+        run: |
+          set -euo pipefail
+          workspace="/workspace/docs/architecture/c4/workspace.dsl"
+          output="/workspace/docs/architecture/c4/export"
+          mkdir -p docs/architecture/c4/export
+          mkdir -p docs/architecture/c4/img
+          find docs/architecture/c4/export -maxdepth 1 -type f \
+            \( -name 'structurizr-*.puml' -o -name 'structurizr-*.mmd' \) -delete
+          find docs/architecture/c4/img -maxdepth 1 -type f \
+            \( -name 'structurizr-*.png' -o -name 'structurizr-*-mermaid.png' \) -delete
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            structurizr/cli:1.31.0 \
+            export -workspace "$workspace" -format plantuml -output "$output"
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            structurizr/cli:1.31.0 \
+            export -workspace "$workspace" -format mermaid -output "$output"
+          find docs/architecture/c4/export -maxdepth 1 -type f -name '*-key.puml' -delete
+          plantuml_views="$(find docs/architecture/c4/export -maxdepth 1 -type f \
+            -name 'structurizr-*.puml' ! -name '*-key.puml' | wc -l)"
+          mermaid_views="$(find docs/architecture/c4/export -maxdepth 1 -type f \
+            -name 'structurizr-*.mmd' | wc -l)"
+          if [ "$plantuml_views" -ne 5 ] || [ "$mermaid_views" -ne 5 ]; then
+            echo "::error::Se esperaban cinco vistas C4 por formato; PlantUML=$plantuml_views, Mermaid=$mermaid_views"
+            exit 1
+          fi
+
+      - name: Regenerar imágenes C4 de PlantUML
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            plantuml/plantuml:1.2026.9 \
+            -tpng -o /workspace/docs/architecture/c4/img \
+            /workspace/docs/architecture/c4/export/*.puml
+
+      - name: Regenerar imágenes C4 de Mermaid
+        run: |
+          set -euo pipefail
+          for mmd in docs/architecture/c4/export/*.mmd; do
+            [ -e "$mmd" ] || continue
+            mmdc -i "$mmd" \
+              -o "docs/architecture/c4/img/$(basename "${mmd%.mmd}")-mermaid.png" \
+              -p puppeteer.json -b white -s 2
+          done
+          plantuml_images="$(find docs/architecture/c4/img -maxdepth 1 -type f \
+            -name 'structurizr-*.png' ! -name '*-mermaid.png' | wc -l)"
+          mermaid_images="$(find docs/architecture/c4/img -maxdepth 1 -type f \
+            -name 'structurizr-*-mermaid.png' | wc -l)"
+          if [ "$plantuml_images" -ne 5 ] || [ "$mermaid_images" -ne 5 ]; then
+            echo "::error::No se generaron las diez imágenes C4 esperadas; PlantUML=$plantuml_images, Mermaid=$mermaid_images"
+            exit 1
+          fi
 
       - name: Validar sintaxis de los .mmd
         run: |
@@ -77,11 +145,13 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/architecture/diagramas/img/
+          git add docs/architecture/diagramas/img/ \
+            docs/architecture/c4/export/ \
+            docs/architecture/c4/img/
           if git diff --cached --quiet; then
-            echo "Las imagenes no cambiaron: no se crea commit."
+            echo "Los diagramas no cambiaron: no se crea commit."
           else
-            git commit -m "CI: regenerar PNG de diagramas [skip ci]"
+            git commit -m "CI: regenerar diagramas C4 y Mermaid [skip ci]"
             git push
-            echo "PNG regeneradas y publicadas."
+            echo "Diagramas regenerados y publicados."
           fi
