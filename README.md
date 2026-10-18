@@ -121,3 +121,45 @@ stateDiagram-v2
 - [Diagrama de paquetes](docs/design/paquetes.puml) · [imagen](docs/design/img/paquetes.png)
 - [Round-trip](docs/design/round-trip.md) · [Consistencia](docs/design/consistencia.md) · [Bitácora de IA](docs/design/bitacora-ia.md)
 - [ADR-004](docs/architecture/adr/004-ingesta-coordina-seguimiento-y-alertas.md)
+
+## Arquitectura C4 (Lab 06)
+
+Modelo C4 de RutaSIT Arequipa escrito en Structurizr DSL (`docs/architecture/c4/workspace.dsl`). Todas las vistas salen de ese único archivo.
+
+### Contexto del sistema (nivel 1)
+```mermaid
+graph LR
+  linkStyle default fill:#ffffff
+
+  subgraph diagram ["System Context View: RutaSIT"]
+    style diagram fill:#ffffff,stroke:#ffffff
+
+    1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Persona que consulta dónde<br />está su bus y cuánto demora<br />en llegar.</div>"]
+    style 1 fill:#08427b,stroke:#052e56,color:#ffffff
+    2["<div style='font-weight: bold'>Operador</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Personal del SIT que<br />supervisa los buses y atiende<br />las alertas.</div>"]
+    style 2 fill:#08427b,stroke:#052e56,color:#ffffff
+    3["<div style='font-weight: bold'>Dispositivos GPS de los buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Envían la posición de cada<br />bus cada 10 segundos.</div>"]
+    style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
+    style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    5["<div style='font-weight: bold'>RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Muestra la ubicación de los<br />buses y el tiempo de llegada<br />a cada paradero.</div>"]
+    style 5 fill:#1168bd,stroke:#0b4884,color:#ffffff
+
+    1-. "<div>Consulta dónde está su bus y<br />cuánto demora en llegar</div><div style='font-size: 70%'></div>" .->5
+    2-. "<div>Supervisa los buses y atiende<br />las alertas</div><div style='font-size: 70%'></div>" .->5
+    3-. "<div>Envía la posición del bus</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->5
+    5-. "<div>Pide mapas y tiempos de<br />recorrido</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
+
+  end
+```
+
+### Vistas del modelo
+- [Contexto (nivel 1)](docs/architecture/c4/img/structurizr-Contexto.png)
+- [Contenedores (nivel 2)](docs/architecture/c4/img/structurizr-Contenedores.png)
+- [Componentes (nivel 3)](docs/architecture/c4/img/structurizr-Componentes.png)
+- [Dinámica: consultar la llegada del bus](docs/architecture/c4/img/structurizr-ConsultarLlegada.png)
+- [Despliegue en producción](docs/architecture/c4/img/structurizr-Despliegue.png)
+
+### Documentos
+- [Inventario](docs/architecture/c4/inventario.md) · [Comparación](docs/architecture/c4/comparacion.md) · [Revisión con la lista oficial](docs/architecture/c4/revision-c4.md) · [Explicación para público no técnico](docs/architecture/c4/explicacion.md) · [Bitácora de IA](docs/architecture/c4/bitacora-ia.md)
+- Nivel 4 (código): [clases.puml](docs/design/clases.puml) del Laboratorio 05.

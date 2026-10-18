@@ -1,0 +1,11 @@
+# Bitácora de IA — Laboratorio 06 · RutaSIT Arequipa
+
+| # | Fecha | Herramienta | Prompt (resumen) | Qué propuso la IA | Qué verificamos o corregimos | Decisión |
+|---|-------|-------------|------------------|-------------------|------------------------------|----------|
+| 1 | 17/10/2026 | Claude | Prompt IA 1 adaptado: borrador de workspace.dsl a partir del inventario, el ADR-001, despliegue.py y paquetes.puml. | 2 personas, 2 sistemas externos (GPS y mapas), 4 contenedores (PWA, API, base de datos y caché), 5 componentes y vistas de contexto, contenedores, componentes, dinámica y despliegue. | Se contrastó con el ADR-001, ADR-002 y ADR-003: solo hay tecnologías de nuestros ADR (no apareció Kafka, Celery ni Docker). Nginx y Grafana quedaron como nodos de infraestructura del despliegue y no como contenedores. `structurizr.sh validate` pasó sin errores. | Aceptada |
+| 2 | 17/10/2026 | Claude | Armar el modelo por etapas (una versión por commit E1 a E5). | 5 versiones de workspace.dsl, cada una más completa que la anterior. | Las 5 pasaron `validate`. Se probó con un error puesto a propósito (un componente que no existe) y `validate` lo detectó. | Aceptada |
+| 3 | 17/10/2026 | Claude | Hacer que el export a C4-PlantUML marque los sistemas externos. | Agregar la etiqueta `External` a los sistemas externos. | Se probó y el export no cambió: los externos siguen saliendo como `System`. Se dejó la limitación documentada en comparacion.md. | Rechazada |
+| 4 | 17/10/2026 | Claude | Prompt IA 2 adaptado: revisar las vistas con la lista de c4model.com (script revisar_vistas.py). | Un script que revisa título, leyenda, descripción, tecnología y etiquetas de cada vista. | La primera versión solo revisaba 15 elementos porque no leía las líneas con sangría; se corrigió y revisó 36 elementos y 42 relaciones. Dio 2 hallazgos, los dos falsos positivos (personas sin protocolo en el nivel 1). | Corregida |
+| 5 | 17/10/2026 | Claude | Prompt IA 3: explicar el contexto a una persona no técnica en 120 palabras o menos. | Un texto de 112 palabras. | Se contó con un script (112 palabras) y se comprobó cada frase con el modelo: GPS cada 10 s (ADR-002), aviso de desvío o falta de señal (módulo Alertas) y proveedor de mapas externo. | Aceptada |
+
+> No se incluyó información personal ni confidencial en ningún prompt.
