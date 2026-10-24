@@ -67,6 +67,7 @@ M5 = RF-05.
 | [ADR-001](docs/architecture/adr/001-estilo-arquitectonico.md) | Estilo arquitectónico: monolito modular | Rol A |
 | [ADR-002](docs/architecture/adr/002-protocolo-ingesta-gps.md) | Protocolo de ingesta GPS: HTTPS POST en lugar de MQTT | Rol C |
 | [ADR-003](docs/architecture/adr/003-actualizacion-tiempo-real.md) | Actualización en tiempo real: polling 10 s sobre Redis | Rol C |
+| [ADR-005](docs/architecture/adr/005-patrones-de-diseno.md) | Patrones de diseño en el flujo de consulta del ETA | Rol C |
 
 ## Documentación de arquitectura
 
@@ -169,5 +170,42 @@ graph LR
 - [Despliegue en producción](docs/architecture/c4/img/structurizr-Despliegue.png)
 
 ### Documentos
-- [Inventario](docs/architecture/c4/inventario.md) · [Comparación](docs/architecture/c4/comparacion.md) · [Revisión con la lista oficial](docs/architecture/c4/revision-c4.md) · [Explicación para público no técnico](docs/architecture/c4/explicacion.md) · [Bitácora de IA](docs/architecture/c4/bitacora-ia.md)
-- Nivel 4 (código): [clases.puml](docs/design/clases.puml) del Laboratorio 05.
+- [Inventario](docs/architecture/c4/inventario.md) · [Comparación](docs/architecture/c4/comparacion.md) · [Revisión con la lista oficial](revision-c4.md) · [Explicación para público no técnico](explicacion.md) · [Bitácora de IA](docs/architecture/bitacora-ia.md)
+- Nivel 4 (código): [clases.puml](docs/design/clases.puml) del Laboratorio 05, actualizado con los patrones del Lab 07.
+
+## Patrones de diseño (Lab 07)
+
+Refactor del flujo crítico **consultar el tiempo de llegada (ETA)** (secuencia del Lab 05) hacia 7 patrones GoF,
+protegido por pruebas de caracterización que corren sobre la versión `antes` y la versión con patrones.
+
+| Olor | Patrón | Prueba que lo demuestra |
+|------|--------|-------------------------|
+| `if/elif` por algoritmo de ETA | Strategy + Factory | `test_open_closed_nuevo_algoritmo_sin_modificar_el_servicio` |
+| El servicio conoce el formato de cada operador GPS | Adapter | `test_adapter_traduce_formato_del_operador_b` |
+| Reintentos duplicados (GPS y mapas) | Decorator | `test_decorator_cache_evita_llamadas_repetidas` |
+| Condicionales sobre `viaje.estado` | State | `test_state_impide_transiciones_invalidas` |
+| Avisos armados "a mano" | Observer | `test_observer_nuevo_suscriptor_sin_tocar_el_servicio` |
+| Validación de la salida del LLM mezclada | Chain of Responsibility | `test_chain_se_puede_extender_con_un_guardrail_nuevo` |
+
+| Métrica | Antes | Después |
+|---|---|---|
+| Complejidad de `consultar_eta` | 22 (D) | 3 (A) |
+| Complejidad promedio | 6,25 | 1,64 |
+| SLOC | 85 | 266 |
+| Archivos | 1 | 6 |
+
+Métricas medidas con radon sobre los 6 módulos del Lab 07 (`gps`, `eta`, `estados`, `eventos`, `ia`, `servicio`).
+El repositorio conserva los módulos del Lab 05 (`dominio`, `puertos`, `adaptadores`, `servicios`) y sus 13 pruebas:
+la suite del Lab 07 da **40 passed + 1 xfailed** y la suite completa **53 passed + 1 xfailed**.
+
+Rechazados: Singleton y Abstract Factory. Detalle en [`olores.md`](docs/design/patrones/olores.md),
+[`metricas.md`](docs/design/patrones/metricas.md), [`bitacora-ia.md`](docs/design/patrones/bitacora-ia.md) y
+[ADR-005](docs/architecture/adr/005-patrones-de-diseno.md).
+
+```bash
+pip install -r requirements.txt
+pytest -v test
+pytest -v test/test_comportamiento.py test/test_patrones.py
+radon cc -s -a src/rutasit/antes/
+radon cc -s -a src/rutasit/gps.py src/rutasit/eta.py src/rutasit/estados.py src/rutasit/eventos.py src/rutasit/ia.py src/rutasit/servicio.py
+```
