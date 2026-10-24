@@ -1,0 +1,23 @@
+@startuml decorator
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title Decorator — reintentos, cache y respaldo
+interface EstrategiaEta
+class EtaPorMapas
+class ConReintentosEta <<Decorator>>
+class ConCacheEta <<Decorator>>
+class ConRespaldo <<Decorator>>
+EstrategiaEta <|.. EtaPorMapas
+EstrategiaEta <|.. ConReintentosEta
+EstrategiaEta <|.. ConCacheEta
+EstrategiaEta <|.. ConRespaldo
+ConReintentosEta o--> EstrategiaEta : interna
+ConCacheEta o--> EstrategiaEta : interna
+ConRespaldo o--> EstrategiaEta : principal / respaldo
+note bottom of ConRespaldo
+Orden correcto:
+ConRespaldo( ConCacheEta( ConReintentosEta( EtaPorMapas ) ), EtaPorVelocidad )
+end note
+@enduml

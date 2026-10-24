@@ -1,0 +1,21 @@
+@startuml observer
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title Observer — avisos sin acoplar el servicio
+class ServicioEta
+class PublicadorEventos <<Subject>> {
+  +suscribir(evento, suscriptor)
+  +publicar(evento, datos)
+}
+interface Suscriptor <<Observer>> {
+  +actualizar(evento, datos)
+}
+class NotificadorPasajero <<ConcreteObserver>>
+class AlertaOperador <<ConcreteObserver>>
+ServicioEta --> PublicadorEventos
+PublicadorEventos o--> "0..*" Suscriptor
+Suscriptor <|.. NotificadorPasajero
+Suscriptor <|.. AlertaOperador
+@enduml

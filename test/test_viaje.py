@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pytest
 
 from rutasit.dominio import (Bus, EstadoViaje, Paradero, Posicion, Ruta, Viaje)
-from rutasit.servicio import ServicioAlertas, ServicioEta
+from rutasit.servicios import ServicioAlertas, ServicioEta
 from rutasit.puertos import ProveedorMapas, RepositorioViajes
 
 

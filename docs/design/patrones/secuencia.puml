@@ -1,0 +1,22 @@
+@startuml secuencia
+skinparam shadowing false
+title consultar_eta() con patrones colaborando
+actor Pasajero
+participant ServicioEta
+participant "Viaje\n(State)" as V
+participant "FabricaGps" as FG
+participant "AdaptadorGps\n(ConReintentos)" as G
+participant "FabricaEta" as FE
+participant "EstrategiaEta\n(Respaldo+Cache)" as E
+participant "Publicador\n(Observer)" as P
+Pasajero -> ServicioEta : consultar_eta(viaje, paradero)
+ServicioEta -> V : verificar_eta()
+ServicioEta -> FG : crear(operador)
+ServicioEta -> FE : crear(algoritmo)
+ServicioEta -> G : leer(placa)
+G --> ServicioEta : Posicion
+ServicioEta -> E : estimar(pos, paradero)
+E --> ServicioEta : minutos
+ServicioEta -> P : publicar("eta_calculado")
+P --> Pasajero : "llega en N min"
+@enduml

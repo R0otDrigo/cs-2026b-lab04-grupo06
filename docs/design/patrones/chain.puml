@@ -1,0 +1,29 @@
+@startuml chain
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title Chain of Responsibility + IA aislada (Strategy, Adapter, Decorator)
+interface ProveedorLLM <<Strategy>> {
+  +completar(prompt): str
+}
+class ClaudeAdapter <<Adapter>>
+class ConCacheLLM <<Decorator>>
+abstract class Guardrail <<Handler>> {
+  +validar(texto): str
+  #_aplicar(texto): str
+}
+class SinPrecios <<ConcreteHandler>>
+class LongitudMaxima <<ConcreteHandler>>
+class SinAfirmacionesProhibidas <<ConcreteHandler>>
+class ServicioEta
+ProveedorLLM <|.. ClaudeAdapter
+ProveedorLLM <|.. ConCacheLLM
+ConCacheLLM o--> ProveedorLLM
+Guardrail <|-- SinPrecios
+Guardrail <|-- LongitudMaxima
+Guardrail <|-- SinAfirmacionesProhibidas
+Guardrail o--> Guardrail : siguiente
+ServicioEta --> ConCacheLLM
+ServicioEta --> Guardrail
+@enduml
