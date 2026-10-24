@@ -1,0 +1,30 @@
+name: patrones
+
+"on":
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas-y-complejidad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar pytest y radon
+        run: pip install pytest radon
+
+      - name: Ejecutar la suite completa
+        run: pytest -v test
+
+      - name: Falla si algun metodo supera complejidad 10 (rank C o peor)
+        run: |
+          set -euo pipefail
+          radon cc --min C src/rutasit/*.py | tee radon.txt
+          test ! -s radon.txt
