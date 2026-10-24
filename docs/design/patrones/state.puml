@@ -1,0 +1,26 @@
+@startuml state
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title State — ciclo de vida del Viaje (máquina de estados del Lab 05)
+class Viaje {
+  +iniciar()
+  +marcar_desviado()
+  +marcar_detenido()
+  +reanudar()
+  +finalizar()
+}
+abstract class EstadoViaje <<State>>
+class Programado <<State>>
+class EnRuta <<State>>
+class Desviado <<State>>
+class Detenido <<State>>
+class Finalizado <<State>>
+Viaje o--> EstadoViaje : _estado
+EstadoViaje <|-- Programado
+EstadoViaje <|-- EnRuta
+EstadoViaje <|-- Desviado
+EstadoViaje <|-- Detenido
+EstadoViaje <|-- Finalizado
+@enduml

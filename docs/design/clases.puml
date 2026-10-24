@@ -4,83 +4,185 @@ skinparam shadowing false
 skinparam defaultFontName Arial
 skinparam classBackgroundColor #EEF2F8
 skinparam classBorderColor #1A3A5C
-title RutaSIT Arequipa — Consulta del tiempo de llegada (diseño)
 skinparam nodesep 25
 skinparam ranksep 40
+title RutaSIT Arequipa — Consulta del tiempo de llegada (Lab 05 + patrones del Lab 07)
 
-class Ruta {
-  - id: UUID
-  - codigo: String
-  - nombre: String
+package "Dominio del Lab 05 (legado)" as legado {
+  class Ruta {
+    - id: UUID
+    - codigo: String
+    - nombre: String
+    - paraderos: list
+  }
+  class Paradero {
+    - id: UUID
+    - nombre: String
+    - latitud: double
+    - longitud: double
+  }
+  class Bus {
+    - id: UUID
+    - placa: String
+  }
+  Ruta "1..*" -- "2..*" Paradero : recorre >
 }
-class Paradero {
-  - id: UUID
-  - nombre: String
-  - latitud: double
-  - longitud: double
-}
-class Bus {
-  - id: UUID
-  - placa: String
-}
-class Viaje {
-  - id: UUID
-  - estado: EstadoViaje
-  - horaSalida: DateTime
-  + programar(): void
-  + iniciar(): void
-  + registrarPosicion(p: Posicion): void
-  + ultimaPosicion(): Posicion
-  + estaSinSenal(ahora: DateTime): bool
-  + marcarDesviado(): void
-  + marcarDetenido(): void
-  + reanudar(): void
-  + finalizar(): void
-}
+
 class Posicion {
-  - latitud: double
-  - longitud: double
-  - instante: DateTime
-  - velocidadKmh: double
+  - lat: double
+  - lon: double
+  - vel_kmh: double
 }
 class Estimacion {
   - minutos: int
-  - calculadaEn: DateTime
   - disponible: bool
 }
-enum EstadoViaje {
-  PROGRAMADO
-  EN_RUTA
-  DESVIADO
-  DETENIDO
-  FINALIZADO
-}
-class ServicioEta <<servicio>> {
-  + consultarEta(paradero: Paradero, ahora: DateTime): Estimacion
-}
-class ServicioAlertas <<servicio>> {
-  + avisarSinSenal(v: Viaje): void
-  + avisarDesvio(v: Viaje): void
-}
-interface ProveedorMapas <<puerto>> {
-  + tiempoDeRecorrido(desde: Posicion, hasta: Paradero): int
-}
-interface RepositorioViajes <<puerto>> {
-  + buscarActivosPorParadero(paradero: Paradero): List<Viaje>
-}
-class OsmAdapter <<adaptador>>
 
-Ruta "1..*" -- "2..*" Paradero : recorre >
-Bus "1" -- "0..*" Viaje : realiza >
-Viaje "0..*" -- "1" Ruta : sigue >
-Viaje "1" *-- "0..*" Posicion : registra >
-Viaje --> EstadoViaje
-Estimacion "0..*" --> "1" Paradero : es para >
-ProveedorMapas <|.. OsmAdapter
+class Viaje {
+  - id: UUID
+  - placa: String
+  - operador: String
+  - posiciones: list
+  + estado: str
+  + cambiar_a(nuevo)
+  + iniciar()
+  + marcar_desviado()
+  + marcar_detenido()
+  + reanudar()
+  + finalizar()
+  + verificar_eta()
+}
+
+' ---------- State ----------
+abstract class EstadoViaje <<State>> {
+  + nombre: str
+  + iniciar(viaje)
+  + marcar_desviado(viaje)
+  + marcar_detenido(viaje)
+  + reanudar(viaje)
+  + finalizar(viaje)
+  + verificar_eta(viaje)
+}
+class Programado <<State>>
+class EnRuta <<State>>
+class Desviado <<State>>
+class Detenido <<State>>
+class Finalizado <<State>>
+
+' ---------- Servicio ----------
+class ServicioEta <<servicio>> {
+  - eventos: list
+  - fabrica_gps: FabricaGps
+  - fabrica_eta: FabricaEta
+  - publicador: PublicadorEventos
+  - llm: ProveedorLLM
+  - guardrails: Guardrail
+  + consultar_eta(viaje, paradero, algoritmo): Estimacion
+  + sugerir_explicacion_retraso(eventos): str
+}
+
+' ---------- Adapter + Factory + Decorator (GPS) ----------
+interface PuertoGps <<puerto>> {
+  + leer(placa): Posicion
+}
+class AdaptadorGpsA <<Adapter>>
+class AdaptadorGpsB <<Adapter>>
+class ConReintentos <<Decorator>>
+class FabricaGps <<Factory>> {
+  + registrar(operador, creador)
+  + crear(operador): PuertoGps
+}
+
+' ---------- Strategy + Adapter + Decorator (ETA) ----------
+interface ProveedorMapas <<puerto>> {
+  + tiempo_de_recorrido(o, d): int
+}
+class OsmAdapter <<Adapter>>
+interface EstrategiaEta <<Strategy>> {
+  + estimar(pos, paradero): int
+}
+class EtaPorVelocidad <<Strategy>>
+class EtaPorMapas <<Strategy>>
+class ConCacheEta <<Decorator>>
+class ConReintentosEta <<Decorator>>
+class ConRespaldo <<Decorator>>
+class FabricaEta <<Factory>> {
+  + registrar(nombre, creador)
+  + crear(nombre): EstrategiaEta
+}
+
+' ---------- Observer ----------
+class PublicadorEventos <<Subject>> {
+  + suscribir(evento, suscriptor)
+  + publicar(evento, datos)
+}
+interface Suscriptor <<Observer>> {
+  + actualizar(evento, datos)
+}
+class NotificadorPasajero
+class AlertaOperador
+
+' ---------- IA: Strategy + Adapter + Decorator + Chain ----------
+interface ProveedorLLM <<Strategy>> {
+  + completar(prompt): str
+}
+class ClaudeAdapter <<Adapter>>
+class ConCacheLLM <<Decorator>>
+abstract class Guardrail <<Handler>> {
+  + validar(texto): str
+  # _aplicar(texto): str
+}
+class SinPrecios
+class LongitudMaxima
+class SinAfirmacionesProhibidas
+
+Viaje o--> EstadoViaje
+EstadoViaje <|-- Programado
+EstadoViaje <|-- EnRuta
+EstadoViaje <|-- Desviado
+EstadoViaje <|-- Detenido
+EstadoViaje <|-- Finalizado
+
 ServicioEta ..> Estimacion
-ServicioEta ..> RepositorioViajes
-ServicioEta ..> ProveedorMapas
-ServicioEta ..> ServicioAlertas
-ServicioAlertas ..> Viaje
-RepositorioViajes ..> Viaje
+ServicioEta ..> Viaje : consulta
+ServicioEta --> FabricaGps
+ServicioEta --> FabricaEta
+ServicioEta --> PublicadorEventos
+ServicioEta --> ConCacheLLM
+ServicioEta --> Guardrail
+
+PuertoGps <|.. AdaptadorGpsA
+PuertoGps <|.. AdaptadorGpsB
+PuertoGps <|.. ConReintentos
+ConReintentos o--> PuertoGps
+FabricaGps ..> PuertoGps : crea
+
+ProveedorMapas <|.. OsmAdapter
+EstrategiaEta <|.. EtaPorVelocidad
+EstrategiaEta <|.. EtaPorMapas
+EstrategiaEta <|.. ConCacheEta
+EstrategiaEta <|.. ConReintentosEta
+EstrategiaEta <|.. ConRespaldo
+EtaPorMapas --> ProveedorMapas
+ConCacheEta o--> EstrategiaEta
+ConReintentosEta o--> EstrategiaEta
+ConRespaldo o--> EstrategiaEta
+FabricaEta ..> EstrategiaEta : crea
+
+PublicadorEventos o--> "0..*" Suscriptor
+Suscriptor <|.. NotificadorPasajero
+Suscriptor <|.. AlertaOperador
+
+ProveedorLLM <|.. ClaudeAdapter
+ProveedorLLM <|.. ConCacheLLM
+ConCacheLLM o--> ProveedorLLM
+Guardrail <|-- SinPrecios
+Guardrail <|-- LongitudMaxima
+Guardrail <|-- SinAfirmacionesProhibidas
+Guardrail o--> Guardrail : siguiente
+
+note bottom of Ruta
+  Ruta, Paradero y Bus se conservan del dominio del Lab 05 (legado).
+  El flujo refactorizado del Lab 07 usa Viaje(id, placa, operador).
+end note
 @enduml

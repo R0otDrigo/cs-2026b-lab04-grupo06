@@ -1,0 +1,16 @@
+@startuml strategy
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title Strategy — algoritmos de ETA intercambiables
+class ServicioEta
+interface EstrategiaEta <<Strategy>> {
+  +estimar(pos, paradero): int
+}
+class EtaPorVelocidad <<Strategy>>
+class EtaPorMapas <<Strategy>>
+ServicioEta ..> EstrategiaEta
+EstrategiaEta <|.. EtaPorVelocidad
+EstrategiaEta <|.. EtaPorMapas
+@enduml

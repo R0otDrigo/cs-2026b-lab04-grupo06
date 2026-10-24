@@ -1,0 +1,31 @@
+@startuml adapter
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title Adapter — cada operador GPS y el proveedor de mapas
+interface PuertoGps <<puerto>> {
+  +leer(placa): Posicion
+}
+class AdaptadorGpsA <<Adapter>>
+class AdaptadorGpsB <<Adapter>>
+class GpsOperadorA <<SDK externo>> {
+  +leer_posicion(placa): dict
+}
+class GpsOperadorB <<SDK externo>> {
+  +get_fix(id_bus): tuple
+}
+interface ProveedorMapas <<puerto>> {
+  +tiempo_de_recorrido(origen, destino): int
+}
+class OsmAdapter <<Adapter>>
+class MapasOSM <<SDK externo>> {
+  +route_seconds(o, d): int
+}
+PuertoGps <|.. AdaptadorGpsA
+PuertoGps <|.. AdaptadorGpsB
+AdaptadorGpsA --> GpsOperadorA
+AdaptadorGpsB --> GpsOperadorB
+ProveedorMapas <|.. OsmAdapter
+OsmAdapter --> MapasOSM
+@enduml

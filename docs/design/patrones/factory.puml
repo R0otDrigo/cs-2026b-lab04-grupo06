@@ -1,0 +1,22 @@
+@startuml factory
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam classBackgroundColor #EEF2F8
+skinparam classBorderColor #1A3A5C
+title Factory Method (registro) — crea la estrategia o el adaptador por nombre
+class ServicioEta
+class FabricaEta <<Factory>> {
+  +registrar(nombre, creador)
+  +crear(nombre): EstrategiaEta
+}
+class FabricaGps <<Factory>> {
+  +registrar(operador, creador)
+  +crear(operador): PuertoGps
+}
+interface EstrategiaEta
+interface PuertoGps
+ServicioEta --> FabricaEta
+ServicioEta --> FabricaGps
+FabricaEta ..> EstrategiaEta : crea
+FabricaGps ..> PuertoGps : crea
+@enduml
