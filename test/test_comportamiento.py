@@ -6,7 +6,7 @@ import pytest
 from rutasit.externos import GpsOperadorA, GpsOperadorB, MapasOSM, ClienteLLMFalso
 
 
-@pytest.fixture(params=["rutasit.antes.servicio"])
+@pytest.fixture(params=["rutasit.servicio"])
 def m(request):
     return importlib.import_module(request.param)
 
