@@ -209,3 +209,21 @@ pytest -v test/test_comportamiento.py test/test_patrones.py
 radon cc -s -a src/rutasit/antes/
 radon cc -s -a src/rutasit/gps.py src/rutasit/eta.py src/rutasit/estados.py src/rutasit/eventos.py src/rutasit/ia.py src/rutasit/servicio.py
 ```
+
+### Reto opcional B — Integración continua
+
+[![patrones](https://github.com/R0otDrigo/cs-2026b-lab04-grupo06/actions/workflows/patrones.yml/badge.svg?branch=main)](https://github.com/R0otDrigo/cs-2026b-lab04-grupo06/actions/workflows/patrones.yml)
+
+La [Action de patrones](.github/workflows/patrones.yml) se ejecuta en cada `push` y `pull request`.
+Instala pytest y radon, corre la suite completa y falla si `radon cc --min C src/rutasit/*.py`
+encuentra algún método con complejidad **C (11) o peor**. El trabajo corre sobre Python 3.12 y no
+necesita credenciales.
+
+![Ejecución en verde de la Action de pytest y radon](docs/design/patrones/img/figura-20-github-action.png)
+
+*Figura 20. GitHub Action de pytest y radon: ejecución en verde sobre el tag `v0.7-patrones`
+([run 40058026184](https://github.com/R0otDrigo/cs-2026b-lab04-grupo06/actions/runs/40058026184)).*
+
+El guardia no es decorativo: con un método sintético de complejidad C, `radon` lo reporta y
+`test ! -s radon.txt` termina con error; con los seis módulos actuales no hay salida y la
+ejecución pasa. La suite deja **53 passed + 1 xfailed**.
