@@ -1,0 +1,22 @@
+digraph U {
+  graph [rankdir=LR, nodesep=0.14, ranksep=0.4, fontname="Arial", pad=0.15];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=11, margin="0.12,0.06"];
+  edge [color="#7F7F7F", arrowhead=none];
+  U [label="Utilidad\nRutaSIT Arequipa", fillcolor="#1A3A5C", fontcolor="white", color="#1A3A5C", fontsize=13];
+  node [fillcolor="#C8310E", fontcolor="white", color="#C8310E"];
+  R [label="Rendimiento"]; D [label="Disponibilidad"]; S [label="Seguridad"]; M [label="Modificabilidad"];
+  node [fillcolor="#F4CCC3", fontcolor="black", color="#C8310E"];
+  R1 [label="Consulta de ETA\nen hora punta"]; R2 [label="Frescura con\n1200 buses"];
+  D1 [label="Fallas del proveedor\nde mapas"]; D2 [label="Caché fría\n(Redis reiniciado)"];
+  S1 [label="Aislamiento entre\noperadores"]; S2 [label="Autenticación de\ndispositivos GPS"];
+  M1 [label="Nuevo operador GPS"];
+  node [fillcolor="#F7F7F7", color="#9A9A9A", fontcolor="black", width=6.6, fontsize=10.5];
+  Q1 [label="(H,H) QA-01: 50 000 consultas de ETA en la hora punta (14 req/s, ráfagas de 28) → p95 ≤ 1 s"];
+  Q2 [label="(H,M) QA-02: 1200 buses envían su posición cada 10 s (120 pos/s) → proceso de cada posición con p95 ≤ 5 s"];
+  Q3 [label="(H,H) QA-03: el proveedor de mapas cae 20 min → 0 consultas sin ETA y p95 ≤ 1 s"];
+  Q4 [label="(H,M) QA-04: Redis se reinicia (caché vacía) con 28 req/s → p95 ≤ 1 s sin la caché"];
+  Q5 [label="(H,M) QA-05: un usuario del operador A nunca ve buses del operador B → 0 filas ajenas en 200 consultas"];
+  Q6 [label="(M,M) QA-06: mensaje GPS con firma inválida o de más de 60 s → 0 aceptados en 1000 alteraciones"];
+  Q7 [label="(M,L) QA-07: incorporar un operador GPS nuevo en ≤ 1 día-persona, sin modificar el servicio (Lab 07)"];
+  U -> {R D S M}; R -> R1 -> Q1; R -> R2 -> Q2; D -> D1 -> Q3; D -> D2 -> Q4; S -> S1 -> Q5; S -> S2 -> Q6; M -> M1 -> Q7;
+}
