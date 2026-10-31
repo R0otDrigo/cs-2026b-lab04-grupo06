@@ -4,47 +4,50 @@ graph LR
   subgraph diagram [RutaSIT - Deployment - Producción]
     style diagram fill:#ffffff,stroke:#ffffff
 
-    subgraph 45 [Celular o PC del usuario]
-      style 45 fill:#ffffff,stroke:#888888,color:#000000
+    subgraph 50 [Celular o PC del usuario]
+      style 50 fill:#ffffff,stroke:#888888,color:#000000
 
-      46["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
-      style 46 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      51["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
+      style 51 fill:#438dd5,stroke:#2e6295,color:#ffffff
     end
 
-    subgraph 47 [VPS en la nube]
-      style 47 fill:#ffffff,stroke:#888888,color:#000000
+    subgraph 52 [VPS en la nube]
+      style 52 fill:#ffffff,stroke:#888888,color:#000000
 
-      48["<div style='font-weight: bold'>Nginx</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: Nginx]</div><div style='font-size: 80%; margin-top:10px'>Recibe las peticiones y<br />aplica HTTPS.</div>"]
-      style 48 fill:#dddddd,stroke:#9a9a9a,color:#000000
-      49["<div style='font-weight: bold'>Grafana</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: Grafana]</div><div style='font-size: 80%; margin-top:10px'>Muestra el estado del<br />servidor y de la aplicación.</div>"]
-      style 49 fill:#dddddd,stroke:#9a9a9a,color:#000000
-      subgraph 50 [Servidor de aplicación]
-        style 50 fill:#ffffff,stroke:#888888,color:#000000
-
-        51["<div style='font-weight: bold'>API RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python / Django]</div><div style='font-size: 80%; margin-top:10px'>Monolito modular que recibe<br />posiciones, calcula tiempos<br />de llegada y genera alertas.</div>"]
-        style 51 fill:#438dd5,stroke:#2e6295,color:#ffffff
-      end
-
-      subgraph 53 [Servidor de base de datos]
-        style 53 fill:#ffffff,stroke:#888888,color:#000000
-
-        54[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo).</div>")]
-        style 54 fill:#438dd5,stroke:#2e6295,color:#ffffff
-      end
-
-      subgraph 56 [Servidor de caché]
+      53["<div style='font-weight: bold'>Nginx</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: Nginx (limit_req)]</div><div style='font-size: 80%; margin-top:10px'>Recibe las peticiones, aplica<br />HTTPS y limita la tasa de<br />solicitudes por dispositivo.<br />[QA-06]</div>"]
+      style 53 fill:#dddddd,stroke:#9a9a9a,color:#000000
+      54["<div style='font-weight: bold'>Respaldo diario</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: cron + pg_dump]</div><div style='font-size: 80%; margin-top:10px'>Copia diaria de la base de<br />datos para recuperar el<br />servicio en 2 horas. [riesgo<br />R1]</div>"]
+      style 54 fill:#dddddd,stroke:#9a9a9a,color:#000000
+      55["<div style='font-weight: bold'>Grafana</div><div style='font-size: 70%; margin-top: 0px'>[Infrastructure Node: Grafana]</div><div style='font-size: 80%; margin-top:10px'>Muestra el estado del<br />servidor y de la aplicación.</div>"]
+      style 55 fill:#dddddd,stroke:#9a9a9a,color:#000000
+      subgraph 56 [Servidor de aplicación]
         style 56 fill:#ffffff,stroke:#888888,color:#000000
 
-        57[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
+        57["<div style='font-weight: bold'>API RutaSIT</div><div style='font-size: 70%; margin-top: 0px'>[Container: Python / Django]</div><div style='font-size: 80%; margin-top:10px'>Monolito modular que recibe<br />posiciones, calcula tiempos<br />de llegada y genera alertas.<br />[QA-01, QA-02, QA-03, QA-05,<br />QA-06]</div>"]
         style 57 fill:#438dd5,stroke:#2e6295,color:#ffffff
       end
 
+      subgraph 59 [Servidor de base de datos]
+        style 59 fill:#ffffff,stroke:#888888,color:#000000
+
+        60[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS (índice GiST)]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo). Índice<br />espacial y filtro obligatorio<br />por operador. [QA-01, QA-05]</div>")]
+        style 60 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      end
+
+      subgraph 62 [Servidor de caché]
+        style 62 fill:#ffffff,stroke:#888888,color:#000000
+
+        63[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />ETA por paradero con TTL de<br />10 s; si se vacía, se<br />reconstruye desde PostgreSQL.<br />[QA-01, QA-04]</div>")]
+        style 63 fill:#438dd5,stroke:#2e6295,color:#ffffff
+      end
+
     end
 
-    46-. "<div>Hace consultas</div><div style='font-size: 70%'>[HTTPS/JSON (REST)]</div>" .->51
-    51-. "<div>Lee y guarda viajes,<br />posiciones y alertas</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->54
-    51-. "<div>Guarda y lee posiciones y<br />tiempos de llegada</div><div style='font-size: 70%'>[Redis protocol]</div>" .->57
-    46-. "<div>Envía las consultas</div><div style='font-size: 70%'>[HTTPS]</div>" .->48
-    48-. "<div>Reenvía las peticiones</div><div style='font-size: 70%'>[HTTP]</div>" .->51
-    51-. "<div>Envía métricas</div><div style='font-size: 70%'>[HTTP]</div>" .->49
+    51-. "<div>Hace consultas</div><div style='font-size: 70%'>[HTTPS/JSON (REST)]</div>" .->57
+    57-. "<div>Lee y guarda viajes,<br />posiciones y alertas</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->60
+    57-. "<div>Guarda y lee posiciones y<br />tiempos de llegada</div><div style='font-size: 70%'>[Redis protocol]</div>" .->63
+    51-. "<div>Envía las consultas</div><div style='font-size: 70%'>[HTTPS]</div>" .->53
+    53-. "<div>Reenvía las peticiones</div><div style='font-size: 70%'>[HTTP]</div>" .->57
+    57-. "<div>Envía métricas</div><div style='font-size: 70%'>[HTTP]</div>" .->55
+    60-. "<div>Copia diaria</div><div style='font-size: 70%'>[pg_dump]</div>" .->54
   end

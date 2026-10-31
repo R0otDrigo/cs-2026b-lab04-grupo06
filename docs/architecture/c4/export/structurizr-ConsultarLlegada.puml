@@ -56,13 +56,13 @@ skinparam rectangle<<RutaSIT.APIRutaSIT>> {
 }
 
 rectangle "API RutaSIT\n<size:10>[Container: Python / Django]</size>" <<RutaSIT.APIRutaSIT>> {
-  rectangle "==Módulo ETA\n<size:10>[Component: Django app]</size>\n\nCalcula el tiempo de llegada a cada paradero." <<RutaSIT.APIRutaSIT.MóduloETA>> as RutaSIT.APIRutaSIT.MóduloETA
+  rectangle "==Módulo ETA\n<size:10>[Component: Django app]</size>\n\nCalcula el tiempo de llegada con reintentos, circuit breaker y respaldo por velocidad. [QA-01, QA-03]" <<RutaSIT.APIRutaSIT.MóduloETA>> as RutaSIT.APIRutaSIT.MóduloETA
   rectangle "==Módulo Alertas\n<size:10>[Component: Django app]</size>\n\nAvisa al operador de desvíos y de buses sin señal." <<RutaSIT.APIRutaSIT.MóduloAlertas>> as RutaSIT.APIRutaSIT.MóduloAlertas
   rectangle "==Módulo Seguimiento\n<size:10>[Component: Django app]</size>\n\nGuarda los viajes y sus posiciones y controla su estado." <<RutaSIT.APIRutaSIT.MóduloSeguimiento>> as RutaSIT.APIRutaSIT.MóduloSeguimiento
 }
 
-database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y tiempos de llegada ya calculados." <<RutaSIT.Caché>> as RutaSIT.Caché
 rectangle "==Proveedor de mapas\n<size:10>[Software System]</size>\n\nEntrega los mapas y calcula el tiempo de recorrido entre dos puntos." <<Proveedordemapas>> as Proveedordemapas
+database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" <<RutaSIT.Caché>> as RutaSIT.Caché
 rectangle "==Aplicación web progresiva\n<size:10>[Container: JavaScript + Service Worker]</size>\n\nMapa y consulta de llegadas para el pasajero; panel de alertas para el operador." <<RutaSIT.Aplicaciónwebprogresiva>> as RutaSIT.Aplicaciónwebprogresiva
 
 RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloETA : "<color:#707070>1. Consulta el tiempo de llegada\n<color:#707070><size:8>[HTTPS/JSON]</size>"

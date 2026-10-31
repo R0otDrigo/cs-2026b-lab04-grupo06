@@ -11,15 +11,16 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
 
         rutasit = softwareSystem "RutaSIT" "Muestra la ubicación de los buses y el tiempo de llegada a cada paradero." {
             pwa = container "Aplicación web progresiva" "Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador." "JavaScript + Service Worker" "Web Browser"
-            api = container "API RutaSIT" "Monolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas." "Python / Django" {
-                ingesta = component "Módulo Ingesta" "Recibe la posición que envía cada bus." "Django app"
+            api = container "API RutaSIT" "Monolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas. [QA-01, QA-02, QA-03, QA-05, QA-06]" "Python / Django" {
+                ingesta = component "Módulo Ingesta" "Recibe la posición de cada bus, verifica su firma y recalcula el ETA con la estrategia rápida (por velocidad). [QA-02, QA-06]" "Django app"
                 seguimiento = component "Módulo Seguimiento" "Guarda los viajes y sus posiciones y controla su estado." "Django app"
-                eta = component "Módulo ETA" "Calcula el tiempo de llegada a cada paradero." "Django app"
+                eta = component "Módulo ETA" "Calcula el tiempo de llegada con reintentos, circuit breaker y respaldo por velocidad. [QA-01, QA-03]" "Django app"
                 alertas = component "Módulo Alertas" "Avisa al operador de desvíos y de buses sin señal." "Django app"
                 rutas = component "Módulo Rutas" "Administra las rutas y los paraderos." "Django app"
+                seguridad = component "Módulo Seguridad" "Verifica la firma de cada posición (HMAC) y filtra los datos por operador. [QA-05, QA-06]" "Django app"
             }
-            db = container "Base de datos" "Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo)." "PostgreSQL + PostGIS" "Database"
-            cache = container "Caché" "Última posición de cada bus y tiempos de llegada ya calculados." "Redis" "Cache"
+            db = container "Base de datos" "Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]" "PostgreSQL + PostGIS (índice GiST)" "Database"
+            cache = container "Caché" "Última posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" "Redis" "Cache"
         }
 
         pasajero -> rutasit "Consulta dónde está su bus y cuánto demora en llegar"
@@ -54,13 +55,18 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
         rutasit.api.ingesta -> rutasit.cache "Guarda la última posición" "Redis protocol"
         rutasit.api.eta -> rutasit.cache "Guarda y lee tiempos de llegada" "Redis protocol"
         rutasit.api.eta -> mapas "Pide el tiempo de recorrido" "HTTPS/JSON"
+        rutasit.pwa -> rutasit.api.seguridad "Inicia sesión (operador)" "HTTPS/JSON"
+        rutasit.api.ingesta -> rutasit.api.seguridad "Verifica la firma del dispositivo" "Python (llamada interna)"
+        rutasit.api.seguimiento -> rutasit.api.seguridad "Filtra los viajes por operador" "Python (llamada interna)"
+        rutasit.api.seguridad -> rutasit.db "Lee los operadores y sus secretos" "SQL/TCP"
 
         produccion = deploymentEnvironment "Producción" {
             celular = deploymentNode "Celular o PC del usuario" "" "Android / navegador web" {
                 pwaInstancia = containerInstance rutasit.pwa
             }
             vps = deploymentNode "VPS en la nube" "" "Ubuntu 24.04, 2 vCPU, 4 GB RAM" {
-                proxy = infrastructureNode "Nginx" "Recibe las peticiones y aplica HTTPS." "Nginx"
+                proxy = infrastructureNode "Nginx" "Recibe las peticiones, aplica HTTPS y limita la tasa de solicitudes por dispositivo. [QA-06]" "Nginx (limit_req)"
+                respaldo = infrastructureNode "Respaldo diario" "Copia diaria de la base de datos para recuperar el servicio en 2 horas. [riesgo R1]" "cron + pg_dump"
                 monitoreo = infrastructureNode "Grafana" "Muestra el estado del servidor y de la aplicación." "Grafana"
                 servidorApp = deploymentNode "Servidor de aplicación" "" "Django" {
                     apiInstancia = containerInstance rutasit.api
@@ -75,6 +81,7 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
             celular.pwaInstancia -> vps.proxy "Envía las consultas" "HTTPS"
             vps.proxy -> vps.servidorApp.apiInstancia "Reenvía las peticiones" "HTTP"
             vps.servidorApp.apiInstancia -> vps.monitoreo "Envía métricas" "HTTP"
+            vps.servidorBd.dbInstancia -> vps.respaldo "Copia diaria" "pg_dump"
         }
     }
 
@@ -83,7 +90,7 @@ workspace "RutaSIT Arequipa" "Modelo C4 de la plataforma de seguimiento en tiemp
             include *
             autolayout lr
         }
-        container rutasit "Contenedores" "Nivel 2: contenedores de RutaSIT." {
+        container rutasit "Contenedores" "Nivel 2: contenedores de RutaSIT; cada elemento indica entre corchetes el escenario [QA-xx] que atiende." {
             include *
             autolayout lr
         }

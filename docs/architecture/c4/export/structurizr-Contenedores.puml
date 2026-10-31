@@ -73,10 +73,10 @@ rectangle "==Dispositivos GPS de los buses\n<size:10>[Software System]</size>\n\
 rectangle "==Proveedor de mapas\n<size:10>[Software System]</size>\n\nEntrega los mapas y calcula el tiempo de recorrido entre dos puntos." <<Proveedordemapas>> as Proveedordemapas
 
 rectangle "RutaSIT\n<size:10>[Software System]</size>" <<RutaSIT>> {
-  database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo)." <<RutaSIT.Basededatos>> as RutaSIT.Basededatos
-  database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y tiempos de llegada ya calculados." <<RutaSIT.Caché>> as RutaSIT.Caché
+  database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS (índice GiST)]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]" <<RutaSIT.Basededatos>> as RutaSIT.Basededatos
+  database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" <<RutaSIT.Caché>> as RutaSIT.Caché
   rectangle "==Aplicación web progresiva\n<size:10>[Container: JavaScript + Service Worker]</size>\n\nMapa y consulta de llegadas para el pasajero; panel de alertas para el operador." <<RutaSIT.Aplicaciónwebprogresiva>> as RutaSIT.Aplicaciónwebprogresiva
-  rectangle "==API RutaSIT\n<size:10>[Container: Python / Django]</size>\n\nMonolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas." <<RutaSIT.APIRutaSIT>> as RutaSIT.APIRutaSIT
+  rectangle "==API RutaSIT\n<size:10>[Container: Python / Django]</size>\n\nMonolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas. [QA-01, QA-02, QA-03, QA-05, QA-06]" <<RutaSIT.APIRutaSIT>> as RutaSIT.APIRutaSIT
 }
 
 Pasajero .[#707070,thickness=2].> RutaSIT.Aplicaciónwebprogresiva : "<color:#707070>Usa\n<color:#707070><size:8>[HTTPS]</size>"

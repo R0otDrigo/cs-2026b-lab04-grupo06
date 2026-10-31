@@ -55,6 +55,12 @@ skinparam rectangle<<Producción.VPSenlanube.Nginx>> {
   BorderColor #9a9a9a
   shadowing false
 }
+skinparam rectangle<<Producción.VPSenlanube.Respaldodiario>> {
+  BackgroundColor #dddddd
+  FontColor #000000
+  BorderColor #9a9a9a
+  shadowing false
+}
 skinparam rectangle<<Producción.VPSenlanube.Servidordeaplicación>> {
   BackgroundColor #ffffff
   FontColor #000000
@@ -85,18 +91,19 @@ rectangle "Celular o PC del usuario\n<size:10>[Deployment Node: Android / navega
 }
 
 rectangle "VPS en la nube\n<size:10>[Deployment Node: Ubuntu 24.04, 2 vCPU, 4 GB RAM]</size>" <<Producción.VPSenlanube>> as Producción.VPSenlanube {
-  rectangle "==Nginx\n<size:10>[Infrastructure Node: Nginx]</size>\n\nRecibe las peticiones y aplica HTTPS." <<Producción.VPSenlanube.Nginx>> as Producción.VPSenlanube.Nginx
+  rectangle "==Nginx\n<size:10>[Infrastructure Node: Nginx (limit_req)]</size>\n\nRecibe las peticiones, aplica HTTPS y limita la tasa de solicitudes por dispositivo. [QA-06]" <<Producción.VPSenlanube.Nginx>> as Producción.VPSenlanube.Nginx
+  rectangle "==Respaldo diario\n<size:10>[Infrastructure Node: cron + pg_dump]</size>\n\nCopia diaria de la base de datos para recuperar el servicio en 2 horas. [riesgo R1]" <<Producción.VPSenlanube.Respaldodiario>> as Producción.VPSenlanube.Respaldodiario
   rectangle "==Grafana\n<size:10>[Infrastructure Node: Grafana]</size>\n\nMuestra el estado del servidor y de la aplicación." <<Producción.VPSenlanube.Grafana>> as Producción.VPSenlanube.Grafana
   rectangle "Servidor de aplicación\n<size:10>[Deployment Node: Django]</size>" <<Producción.VPSenlanube.Servidordeaplicación>> as Producción.VPSenlanube.Servidordeaplicación {
-    rectangle "==API RutaSIT\n<size:10>[Container: Python / Django]</size>\n\nMonolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas." <<Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1>> as Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1
+    rectangle "==API RutaSIT\n<size:10>[Container: Python / Django]</size>\n\nMonolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas. [QA-01, QA-02, QA-03, QA-05, QA-06]" <<Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1>> as Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1
   }
 
   rectangle "Servidor de base de datos\n<size:10>[Deployment Node: PostgreSQL + PostGIS]</size>" <<Producción.VPSenlanube.Servidordebasededatos>> as Producción.VPSenlanube.Servidordebasededatos {
-    database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo)." <<Producción.VPSenlanube.Servidordebasededatos.Basededatos_1>> as Producción.VPSenlanube.Servidordebasededatos.Basededatos_1
+    database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS (índice GiST)]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]" <<Producción.VPSenlanube.Servidordebasededatos.Basededatos_1>> as Producción.VPSenlanube.Servidordebasededatos.Basededatos_1
   }
 
   rectangle "Servidor de caché\n<size:10>[Deployment Node: Redis]</size>" <<Producción.VPSenlanube.Servidordecaché>> as Producción.VPSenlanube.Servidordecaché {
-    database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y tiempos de llegada ya calculados." <<Producción.VPSenlanube.Servidordecaché.Caché_1>> as Producción.VPSenlanube.Servidordecaché.Caché_1
+    database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" <<Producción.VPSenlanube.Servidordecaché.Caché_1>> as Producción.VPSenlanube.Servidordecaché.Caché_1
   }
 
 }
@@ -107,4 +114,5 @@ Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 .[#707070,thickness=2
 Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1 .[#707070,thickness=2].> Producción.VPSenlanube.Nginx : "<color:#707070>Envía las consultas\n<color:#707070><size:8>[HTTPS]</size>"
 Producción.VPSenlanube.Nginx .[#707070,thickness=2].> Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 : "<color:#707070>Reenvía las peticiones\n<color:#707070><size:8>[HTTP]</size>"
 Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 .[#707070,thickness=2].> Producción.VPSenlanube.Grafana : "<color:#707070>Envía métricas\n<color:#707070><size:8>[HTTP]</size>"
+Producción.VPSenlanube.Servidordebasededatos.Basededatos_1 .[#707070,thickness=2].> Producción.VPSenlanube.Respaldodiario : "<color:#707070>Copia diaria\n<color:#707070><size:8>[pg_dump]</size>"
 @enduml

@@ -4,12 +4,12 @@ graph LR
   subgraph diagram [RutaSIT - API RutaSIT - Components]
     style diagram fill:#ffffff,stroke:#ffffff
 
-    13[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo).</div>")]
-    style 13 fill:#438dd5,stroke:#2e6295,color:#ffffff
-    14[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />tiempos de llegada ya<br />calculados.</div>")]
+    14[("<div style='font-weight: bold'>Base de datos</div><div style='font-size: 70%; margin-top: 0px'>[Container: PostgreSQL + PostGIS (índice GiST)]</div><div style='font-size: 80%; margin-top:10px'>Rutas, paraderos, viajes,<br />posiciones y alertas (un<br />esquema por módulo). Índice<br />espacial y filtro obligatorio<br />por operador. [QA-01, QA-05]</div>")]
     style 14 fill:#438dd5,stroke:#2e6295,color:#ffffff
     3["<div style='font-weight: bold'>Dispositivos GPS de los buses</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Envían la posición de cada<br />bus cada 10 segundos.</div>"]
     style 3 fill:#999999,stroke:#6b6b6b,color:#ffffff
+    15[("<div style='font-weight: bold'>Caché</div><div style='font-size: 70%; margin-top: 0px'>[Container: Redis]</div><div style='font-size: 80%; margin-top:10px'>Última posición de cada bus y<br />ETA por paradero con TTL de<br />10 s; si se vacía, se<br />reconstruye desde PostgreSQL.<br />[QA-01, QA-04]</div>")]
+    style 15 fill:#438dd5,stroke:#2e6295,color:#ffffff
     4["<div style='font-weight: bold'>Proveedor de mapas</div><div style='font-size: 70%; margin-top: 0px'>[Software System]</div><div style='font-size: 80%; margin-top:10px'>Entrega los mapas y calcula<br />el tiempo de recorrido entre<br />dos puntos.</div>"]
     style 4 fill:#999999,stroke:#6b6b6b,color:#ffffff
     6["<div style='font-weight: bold'>Aplicación web progresiva</div><div style='font-size: 70%; margin-top: 0px'>[Container: JavaScript + Service Worker]</div><div style='font-size: 80%; margin-top:10px'>Mapa y consulta de llegadas<br />para el pasajero; panel de<br />alertas para el operador.</div>"]
@@ -18,13 +18,15 @@ graph LR
     subgraph 7 [API RutaSIT]
       style 7 fill:#ffffff,stroke:#2e6295,color:#2e6295
 
-      10["<div style='font-weight: bold'>Módulo ETA</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Calcula el tiempo de llegada<br />a cada paradero.</div>"]
+      10["<div style='font-weight: bold'>Módulo ETA</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Calcula el tiempo de llegada<br />con reintentos, circuit<br />breaker y respaldo por<br />velocidad. [QA-01, QA-03]</div>"]
       style 10 fill:#85bbf0,stroke:#5d82a8,color:#000000
       11["<div style='font-weight: bold'>Módulo Alertas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Avisa al operador de desvíos<br />y de buses sin señal.</div>"]
       style 11 fill:#85bbf0,stroke:#5d82a8,color:#000000
       12["<div style='font-weight: bold'>Módulo Rutas</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Administra las rutas y los<br />paraderos.</div>"]
       style 12 fill:#85bbf0,stroke:#5d82a8,color:#000000
-      8["<div style='font-weight: bold'>Módulo Ingesta</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Recibe la posición que envía<br />cada bus.</div>"]
+      13["<div style='font-weight: bold'>Módulo Seguridad</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Verifica la firma de cada<br />posición (HMAC) y filtra los<br />datos por operador. [QA-05,<br />QA-06]</div>"]
+      style 13 fill:#85bbf0,stroke:#5d82a8,color:#000000
+      8["<div style='font-weight: bold'>Módulo Ingesta</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Recibe la posición de cada<br />bus, verifica su firma y<br />recalcula el ETA con la<br />estrategia rápida (por<br />velocidad). [QA-02, QA-06]</div>"]
       style 8 fill:#85bbf0,stroke:#5d82a8,color:#000000
       9["<div style='font-weight: bold'>Módulo Seguimiento</div><div style='font-size: 70%; margin-top: 0px'>[Component: Django app]</div><div style='font-size: 80%; margin-top:10px'>Guarda los viajes y sus<br />posiciones y controla su<br />estado.</div>"]
       style 9 fill:#85bbf0,stroke:#5d82a8,color:#000000
@@ -43,10 +45,14 @@ graph LR
     10-. "<div>Avisa si los buses no tienen<br />señal</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->11
     11-. "<div>Lee los viajes</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->9
     9-. "<div>Usa la ruta del viaje</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->12
-    9-. "<div>Lee y guarda viajes y<br />posiciones</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->13
-    12-. "<div>Lee y guarda rutas y<br />paraderos</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->13
-    11-. "<div>Guarda las alertas</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->13
-    8-. "<div>Guarda la última posición</div><div style='font-size: 70%'>[Redis protocol]</div>" .->14
-    10-. "<div>Guarda y lee tiempos de<br />llegada</div><div style='font-size: 70%'>[Redis protocol]</div>" .->14
+    9-. "<div>Lee y guarda viajes y<br />posiciones</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    12-. "<div>Lee y guarda rutas y<br />paraderos</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    11-. "<div>Guarda las alertas</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
+    8-. "<div>Guarda la última posición</div><div style='font-size: 70%'>[Redis protocol]</div>" .->15
+    10-. "<div>Guarda y lee tiempos de<br />llegada</div><div style='font-size: 70%'>[Redis protocol]</div>" .->15
     10-. "<div>Pide el tiempo de recorrido</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->4
+    6-. "<div>Inicia sesión (operador)</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->13
+    8-. "<div>Verifica la firma del<br />dispositivo</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->13
+    9-. "<div>Filtra los viajes por<br />operador</div><div style='font-size: 70%'>[Python (llamada interna)]</div>" .->13
+    13-. "<div>Lee los operadores y sus<br />secretos</div><div style='font-size: 70%'>[SQL/TCP]</div>" .->14
   end

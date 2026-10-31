@@ -1,0 +1,28 @@
+name: fitness-functions
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  estructura-y-calidad:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install import-linter pytest
+      - name: FF-01 a FF-04 (estructura, import-linter)
+        run: PYTHONPATH=src lint-imports
+      - name: FF-05 a FF-11 (calidad, pytest)
+        run: PYTHONPATH=src pytest -v test/test_fitness.py test/test_circuit_breaker.py
+  modelo-c4:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - name: Descargar Structurizr CLI
+        run: |
+          curl -sL -o cli.zip https://github.com/structurizr/cli/releases/latest/download/structurizr-cli.zip
+          unzip -q cli.zip -d structurizr-cli
+      - name: Validar el modelo C4 (workspace.dsl)
+        run: structurizr-cli/structurizr.sh validate -w docs/architecture/c4/workspace.dsl

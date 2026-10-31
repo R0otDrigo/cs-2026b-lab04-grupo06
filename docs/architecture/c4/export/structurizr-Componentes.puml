@@ -67,6 +67,12 @@ skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloSeguimiento>> {
   BorderColor #5d82a8
   shadowing false
 }
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloSeguridad>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
 skinparam rectangle<<Proveedordemapas>> {
   BackgroundColor #999999
   FontColor #ffffff
@@ -79,17 +85,18 @@ skinparam rectangle<<RutaSIT.APIRutaSIT>> {
   shadowing false
 }
 
-database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo)." <<RutaSIT.Basededatos>> as RutaSIT.Basededatos
-database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y tiempos de llegada ya calculados." <<RutaSIT.Caché>> as RutaSIT.Caché
+database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS (índice GiST)]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]" <<RutaSIT.Basededatos>> as RutaSIT.Basededatos
 rectangle "==Dispositivos GPS de los buses\n<size:10>[Software System]</size>\n\nEnvían la posición de cada bus cada 10 segundos." <<DispositivosGPSdelosbuses>> as DispositivosGPSdelosbuses
+database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" <<RutaSIT.Caché>> as RutaSIT.Caché
 rectangle "==Proveedor de mapas\n<size:10>[Software System]</size>\n\nEntrega los mapas y calcula el tiempo de recorrido entre dos puntos." <<Proveedordemapas>> as Proveedordemapas
 rectangle "==Aplicación web progresiva\n<size:10>[Container: JavaScript + Service Worker]</size>\n\nMapa y consulta de llegadas para el pasajero; panel de alertas para el operador." <<RutaSIT.Aplicaciónwebprogresiva>> as RutaSIT.Aplicaciónwebprogresiva
 
 rectangle "API RutaSIT\n<size:10>[Container: Python / Django]</size>" <<RutaSIT.APIRutaSIT>> {
-  rectangle "==Módulo ETA\n<size:10>[Component: Django app]</size>\n\nCalcula el tiempo de llegada a cada paradero." <<RutaSIT.APIRutaSIT.MóduloETA>> as RutaSIT.APIRutaSIT.MóduloETA
+  rectangle "==Módulo ETA\n<size:10>[Component: Django app]</size>\n\nCalcula el tiempo de llegada con reintentos, circuit breaker y respaldo por velocidad. [QA-01, QA-03]" <<RutaSIT.APIRutaSIT.MóduloETA>> as RutaSIT.APIRutaSIT.MóduloETA
   rectangle "==Módulo Alertas\n<size:10>[Component: Django app]</size>\n\nAvisa al operador de desvíos y de buses sin señal." <<RutaSIT.APIRutaSIT.MóduloAlertas>> as RutaSIT.APIRutaSIT.MóduloAlertas
   rectangle "==Módulo Rutas\n<size:10>[Component: Django app]</size>\n\nAdministra las rutas y los paraderos." <<RutaSIT.APIRutaSIT.MóduloRutas>> as RutaSIT.APIRutaSIT.MóduloRutas
-  rectangle "==Módulo Ingesta\n<size:10>[Component: Django app]</size>\n\nRecibe la posición que envía cada bus." <<RutaSIT.APIRutaSIT.MóduloIngesta>> as RutaSIT.APIRutaSIT.MóduloIngesta
+  rectangle "==Módulo Seguridad\n<size:10>[Component: Django app]</size>\n\nVerifica la firma de cada posición (HMAC) y filtra los datos por operador. [QA-05, QA-06]" <<RutaSIT.APIRutaSIT.MóduloSeguridad>> as RutaSIT.APIRutaSIT.MóduloSeguridad
+  rectangle "==Módulo Ingesta\n<size:10>[Component: Django app]</size>\n\nRecibe la posición de cada bus, verifica su firma y recalcula el ETA con la estrategia rápida (por velocidad). [QA-02, QA-06]" <<RutaSIT.APIRutaSIT.MóduloIngesta>> as RutaSIT.APIRutaSIT.MóduloIngesta
   rectangle "==Módulo Seguimiento\n<size:10>[Component: Django app]</size>\n\nGuarda los viajes y sus posiciones y controla su estado." <<RutaSIT.APIRutaSIT.MóduloSeguimiento>> as RutaSIT.APIRutaSIT.MóduloSeguimiento
 }
 
@@ -112,4 +119,8 @@ RutaSIT.APIRutaSIT.MóduloAlertas .[#707070,thickness=2].> RutaSIT.Basededatos :
 RutaSIT.APIRutaSIT.MóduloIngesta .[#707070,thickness=2].> RutaSIT.Caché : "<color:#707070>Guarda la última posición\n<color:#707070><size:8>[Redis protocol]</size>"
 RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> RutaSIT.Caché : "<color:#707070>Guarda y lee tiempos de llegada\n<color:#707070><size:8>[Redis protocol]</size>"
 RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> Proveedordemapas : "<color:#707070>Pide el tiempo de recorrido\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguridad : "<color:#707070>Inicia sesión (operador)\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.APIRutaSIT.MóduloIngesta .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguridad : "<color:#707070>Verifica la firma del dispositivo\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloSeguimiento .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguridad : "<color:#707070>Filtra los viajes por operador\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloSeguridad .[#707070,thickness=2].> RutaSIT.Basededatos : "<color:#707070>Lee los operadores y sus secretos\n<color:#707070><size:8>[SQL/TCP]</size>"
 @enduml
