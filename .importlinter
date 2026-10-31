@@ -1,0 +1,50 @@
+[importlinter]
+root_package = rutasit
+
+[importlinter:contract:capas]
+name = FF-01 Capas del nucleo: servicios y adaptadores -> puertos -> dominio (ADR-001)
+type = layers
+layers =
+    rutasit.servicios | rutasit.adaptadores
+    rutasit.puertos
+    rutasit.dominio
+
+[importlinter:contract:patrones-independientes]
+name = FF-02 Los patrones no se conocen entre si; solo el servicio los compone (ADR-005)
+type = independence
+modules =
+    rutasit.eta
+    rutasit.gps
+    rutasit.eventos
+    rutasit.ia
+    rutasit.estados
+
+[importlinter:contract:sin-sdk]
+name = FF-03 Estrategias, adaptadores y dominio no importan los SDK externos (ADR-005)
+type = forbidden
+source_modules =
+    rutasit.eta
+    rutasit.gps
+    rutasit.eventos
+    rutasit.ia
+    rutasit.estados
+    rutasit.resiliencia
+    rutasit.dominio
+    rutasit.puertos
+forbidden_modules =
+    rutasit.externos
+
+[importlinter:contract:sin-antes]
+name = FF-04 El codigo vigente no depende de la version antes (ADR-005)
+type = forbidden
+source_modules =
+    rutasit.servicio
+    rutasit.servicios
+    rutasit.eta
+    rutasit.gps
+    rutasit.eventos
+    rutasit.ia
+    rutasit.estados
+    rutasit.resiliencia
+forbidden_modules =
+    rutasit.antes
