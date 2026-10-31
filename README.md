@@ -227,3 +227,27 @@ necesita credenciales.
 El guardia no es decorativo: con un método sintético de complejidad C, `radon` lo reporta y
 `test ! -s radon.txt` termina con error; con los seis módulos actuales no hay salida y la
 ejecución pasa. La suite deja **53 passed + 1 xfailed**.
+
+## Diseño de la arquitectura (Lab 08)
+
+[![fitness-functions](https://github.com/R0otDrigo/cs-2026b-lab04-grupo06/actions/workflows/fitness.yml/badge.svg)](https://github.com/R0otDrigo/cs-2026b-lab04-grupo06/actions/workflows/fitness.yml)
+
+Escenario de crecimiento: de **300 a 1200 buses** y **50 000 consultas de ETA en la hora punta**.
+
+### Árbol de utilidad
+![Árbol de utilidad](docs/architecture/utilidad/arbol.png)
+
+### Iteraciones de ADD
+| Iteración | Escenario | Táctica | Evidencia | ¿Cumple? |
+|-----------|-----------|---------|-----------|:--------:|
+| 1 | QA-01 y QA-02 (rendimiento) | Índice espacial + caché del ETA (TTL 10 s) + ETA híbrido | Simulación M/G/c: p95 de 41 ms a 28 req/s y de 73 ms a 120 pos/s | Sí |
+| 2 | QA-03 y QA-04 (disponibilidad) | Circuit breaker + ETA de respaldo | Monte Carlo: 0 consultas sin ETA, p95 de 5 ms, 126 llamadas en vez de 50 811 | Sí |
+| 3 | QA-05 y QA-06 (seguridad) | Filtro por operador + RLS + firma HMAC | FF-10 y FF-11: 0 filas ajenas y 0 de 1000 alteraciones aceptadas | Sí |
+
+> **Nota de alcance (Lab 08):** las tácticas de disponibilidad y seguridad se validaron con simulaciones y prototipos (`fitness/` y `test/`). En esta entrega **no se modificó la composición de `servicio.py`**: el circuit breaker existe como decorador probado, pero su integración en el servicio queda pendiente; el ADR-007 describe el diseño objetivo, no el estado actual. Las políticas RLS de PostgreSQL tampoco se prueban en CI (riesgo R2). Los tiempos de las simulaciones son **supuestos**, no mediciones (riesgo R3).
+
+### Documentos
+- [Escenarios](docs/architecture/utilidad/escenarios.md) · [Iteración 1](docs/architecture/add/iteracion-1.md) · [Iteración 2](docs/architecture/add/iteracion-2.md) · [Iteración 3](docs/architecture/add/iteracion-3.md)
+- [ATAM-lite](docs/architecture/atam-lite.md) · [Evidencia de las fitness functions](docs/architecture/add/evidencia-fitness.md) · [Bitácora de IA](docs/architecture/bitacora-ia-lab08.md)
+- ADR: [006](docs/architecture/adr/006-rendimiento-indice-cache-eta.md) · [007](docs/architecture/adr/007-disponibilidad-circuit-breaker.md) · [008](docs/architecture/adr/008-seguridad-aislamiento-y-firma.md)
+- Modelo C4 actualizado: [workspace.dsl](docs/architecture/c4/workspace.dsl) · [contenedores](docs/architecture/c4/img/structurizr-Contenedores.png)
