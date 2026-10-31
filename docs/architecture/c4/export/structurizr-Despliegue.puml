@@ -1,110 +1,51 @@
 @startuml
-set separator none
-title RutaSIT - Deployment - Producción
+title <size:24>Deployment View: RutaSIT - Producción</size>\n<size:24>Despliegue en producción (MVP).</size>
 
+set separator none
 left to right direction
 
-skinparam {
-  arrowFontSize 10
-  defaultTextAlignment center
-  wrapWidth 200
-  maxMessageSize 100
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
+
+!include <C4/C4>
+!include <C4/C4_Context>
+!include <C4/C4_Container>
+!include <C4/C4_Deployment>
+
+Deployment_Node(Producción.CelularoPCdelusuario, "Celular o PC del usuario", $type="Android / navegador web", $descr="", $tags="", $link="") {
+  Container(Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
 }
 
-hide stereotype
-
-skinparam rectangle<<Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1>> {
-  BackgroundColor #438dd5
-  FontColor #ffffff
-  BorderColor #2e6295
-  shadowing false
-}
-skinparam rectangle<<Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1>> {
-  BackgroundColor #438dd5
-  FontColor #ffffff
-  BorderColor #2e6295
-  shadowing false
-}
-skinparam database<<Producción.VPSenlanube.Servidordebasededatos.Basededatos_1>> {
-  BackgroundColor #438dd5
-  FontColor #ffffff
-  BorderColor #2e6295
-  shadowing false
-}
-skinparam database<<Producción.VPSenlanube.Servidordecaché.Caché_1>> {
-  BackgroundColor #438dd5
-  FontColor #ffffff
-  BorderColor #2e6295
-  shadowing false
-}
-skinparam rectangle<<Producción.CelularoPCdelusuario>> {
-  BackgroundColor #ffffff
-  FontColor #000000
-  BorderColor #888888
-  shadowing false
-}
-skinparam rectangle<<Producción.VPSenlanube.Grafana>> {
-  BackgroundColor #dddddd
-  FontColor #000000
-  BorderColor #9a9a9a
-  shadowing false
-}
-skinparam rectangle<<Producción.VPSenlanube.Nginx>> {
-  BackgroundColor #dddddd
-  FontColor #000000
-  BorderColor #9a9a9a
-  shadowing false
-}
-skinparam rectangle<<Producción.VPSenlanube.Servidordeaplicación>> {
-  BackgroundColor #ffffff
-  FontColor #000000
-  BorderColor #888888
-  shadowing false
-}
-skinparam rectangle<<Producción.VPSenlanube.Servidordebasededatos>> {
-  BackgroundColor #ffffff
-  FontColor #000000
-  BorderColor #888888
-  shadowing false
-}
-skinparam rectangle<<Producción.VPSenlanube.Servidordecaché>> {
-  BackgroundColor #ffffff
-  FontColor #000000
-  BorderColor #888888
-  shadowing false
-}
-skinparam rectangle<<Producción.VPSenlanube>> {
-  BackgroundColor #ffffff
-  FontColor #000000
-  BorderColor #888888
-  shadowing false
-}
-
-rectangle "Celular o PC del usuario\n<size:10>[Deployment Node: Android / navegador web]</size>" <<Producción.CelularoPCdelusuario>> as Producción.CelularoPCdelusuario {
-  rectangle "==Aplicación web progresiva\n<size:10>[Container: JavaScript + Service Worker]</size>\n\nMapa y consulta de llegadas para el pasajero; panel de alertas para el operador." <<Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1>> as Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1
-}
-
-rectangle "VPS en la nube\n<size:10>[Deployment Node: Ubuntu 24.04, 2 vCPU, 4 GB RAM]</size>" <<Producción.VPSenlanube>> as Producción.VPSenlanube {
-  rectangle "==Nginx\n<size:10>[Infrastructure Node: Nginx]</size>\n\nRecibe las peticiones y aplica HTTPS." <<Producción.VPSenlanube.Nginx>> as Producción.VPSenlanube.Nginx
-  rectangle "==Grafana\n<size:10>[Infrastructure Node: Grafana]</size>\n\nMuestra el estado del servidor y de la aplicación." <<Producción.VPSenlanube.Grafana>> as Producción.VPSenlanube.Grafana
-  rectangle "Servidor de aplicación\n<size:10>[Deployment Node: Django]</size>" <<Producción.VPSenlanube.Servidordeaplicación>> as Producción.VPSenlanube.Servidordeaplicación {
-    rectangle "==API RutaSIT\n<size:10>[Container: Python / Django]</size>\n\nMonolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas." <<Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1>> as Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1
+Deployment_Node(Producción.VPSenlanube, "VPS en la nube", $type="Ubuntu 24.04, 2 vCPU, 4 GB RAM", $descr="", $tags="", $link="") {
+  Deployment_Node(Producción.VPSenlanube.Nginx, "Nginx", $type="Nginx (limit_req)", $descr="Recibe las peticiones, aplica HTTPS y limita la tasa de solicitudes por dispositivo. [QA-06]", $tags="", $link="")
+  Deployment_Node(Producción.VPSenlanube.Respaldodiario, "Respaldo diario", $type="cron + pg_dump", $descr="Copia diaria de la base de datos para recuperar el servicio en 2 horas. [riesgo R1]", $tags="", $link="")
+  Deployment_Node(Producción.VPSenlanube.Grafana, "Grafana", $type="Grafana", $descr="Muestra el estado del servidor y de la aplicación.", $tags="", $link="")
+  Deployment_Node(Producción.VPSenlanube.Servidordeaplicación, "Servidor de aplicación", $type="Django", $descr="", $tags="", $link="") {
+    Container(Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1, "API RutaSIT", $techn="Python / Django", $descr="Monolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas. [QA-01, QA-02, QA-03, QA-05, QA-06]", $tags="", $link="")
   }
 
-  rectangle "Servidor de base de datos\n<size:10>[Deployment Node: PostgreSQL + PostGIS]</size>" <<Producción.VPSenlanube.Servidordebasededatos>> as Producción.VPSenlanube.Servidordebasededatos {
-    database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo)." <<Producción.VPSenlanube.Servidordebasededatos.Basededatos_1>> as Producción.VPSenlanube.Servidordebasededatos.Basededatos_1
+  Deployment_Node(Producción.VPSenlanube.Servidordebasededatos, "Servidor de base de datos", $type="PostgreSQL + PostGIS", $descr="", $tags="", $link="") {
+    ContainerDb(Producción.VPSenlanube.Servidordebasededatos.Basededatos_1, "Base de datos", $techn="PostgreSQL + PostGIS (índice GiST)", $descr="Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]", $tags="", $link="")
   }
 
-  rectangle "Servidor de caché\n<size:10>[Deployment Node: Redis]</size>" <<Producción.VPSenlanube.Servidordecaché>> as Producción.VPSenlanube.Servidordecaché {
-    database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y tiempos de llegada ya calculados." <<Producción.VPSenlanube.Servidordecaché.Caché_1>> as Producción.VPSenlanube.Servidordecaché.Caché_1
+  Deployment_Node(Producción.VPSenlanube.Servidordecaché, "Servidor de caché", $type="Redis", $descr="", $tags="", $link="") {
+    ContainerDb(Producción.VPSenlanube.Servidordecaché.Caché_1, "Caché", $techn="Redis", $descr="Última posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]", $tags="", $link="")
   }
 
 }
 
-Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1 .[#707070,thickness=2].> Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 : "<color:#707070>Hace consultas\n<color:#707070><size:8>[HTTPS/JSON (REST)]</size>"
-Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 .[#707070,thickness=2].> Producción.VPSenlanube.Servidordebasededatos.Basededatos_1 : "<color:#707070>Lee y guarda viajes, posiciones y alertas\n<color:#707070><size:8>[SQL/TCP]</size>"
-Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 .[#707070,thickness=2].> Producción.VPSenlanube.Servidordecaché.Caché_1 : "<color:#707070>Guarda y lee posiciones y tiempos de llegada\n<color:#707070><size:8>[Redis protocol]</size>"
-Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1 .[#707070,thickness=2].> Producción.VPSenlanube.Nginx : "<color:#707070>Envía las consultas\n<color:#707070><size:8>[HTTPS]</size>"
-Producción.VPSenlanube.Nginx .[#707070,thickness=2].> Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 : "<color:#707070>Reenvía las peticiones\n<color:#707070><size:8>[HTTP]</size>"
-Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1 .[#707070,thickness=2].> Producción.VPSenlanube.Grafana : "<color:#707070>Envía métricas\n<color:#707070><size:8>[HTTP]</size>"
+Rel(Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1, Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1, "Hace consultas", $techn="HTTPS/JSON (REST)", $tags="", $link="")
+Rel(Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1, Producción.VPSenlanube.Servidordebasededatos.Basededatos_1, "Lee y guarda viajes, posiciones y alertas", $techn="SQL/TCP", $tags="", $link="")
+Rel(Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1, Producción.VPSenlanube.Servidordecaché.Caché_1, "Guarda y lee posiciones y tiempos de llegada", $techn="Redis protocol", $tags="", $link="")
+Rel(Producción.CelularoPCdelusuario.Aplicaciónwebprogresiva_1, Producción.VPSenlanube.Nginx, "Envía las consultas", $techn="HTTPS", $tags="", $link="")
+Rel(Producción.VPSenlanube.Nginx, Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1, "Reenvía las peticiones", $techn="HTTP", $tags="", $link="")
+Rel(Producción.VPSenlanube.Servidordeaplicación.APIRutaSIT_1, Producción.VPSenlanube.Grafana, "Envía métricas", $techn="HTTP", $tags="", $link="")
+Rel(Producción.VPSenlanube.Servidordebasededatos.Basededatos_1, Producción.VPSenlanube.Respaldodiario, "Copia diaria", $techn="pg_dump", $tags="", $link="")
+
+SHOW_LEGEND(true)
+hide stereotypes
 @enduml

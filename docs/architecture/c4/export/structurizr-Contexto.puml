@@ -1,57 +1,30 @@
 @startuml
-set separator none
-title RutaSIT - System Context
+title <size:24>System Context View: RutaSIT</size>\n<size:24>Nivel 1: RutaSIT y su entorno.</size>
 
+set separator none
 left to right direction
 
-skinparam {
-  arrowFontSize 10
-  defaultTextAlignment center
-  wrapWidth 200
-  maxMessageSize 100
-}
+<style>
+  root {
+    BackgroundColor: #ffffff
+    FontColor: #444444
+  }
+</style>
 
-hide stereotype
+!include <C4/C4>
+!include <C4/C4_Context>
 
-skinparam rectangle<<DispositivosGPSdelosbuses>> {
-  BackgroundColor #999999
-  FontColor #ffffff
-  BorderColor #6b6b6b
-  shadowing false
-}
-skinparam person<<Operador>> {
-  BackgroundColor #08427b
-  FontColor #ffffff
-  BorderColor #052e56
-  shadowing false
-}
-skinparam person<<Pasajero>> {
-  BackgroundColor #08427b
-  FontColor #ffffff
-  BorderColor #052e56
-  shadowing false
-}
-skinparam rectangle<<Proveedordemapas>> {
-  BackgroundColor #999999
-  FontColor #ffffff
-  BorderColor #6b6b6b
-  shadowing false
-}
-skinparam rectangle<<RutaSIT>> {
-  BackgroundColor #1168bd
-  FontColor #ffffff
-  BorderColor #0b4884
-  shadowing false
-}
+Person(Pasajero, "Pasajero", $descr="Persona que consulta dónde está su bus y cuánto demora en llegar.", $tags="", $link="")
+Person(Operador, "Operador", $descr="Personal del SIT que supervisa los buses y atiende las alertas.", $tags="", $link="")
+System(DispositivosGPSdelosbuses, "Dispositivos GPS de los buses", $descr="Envían la posición de cada bus cada 10 segundos.", $tags="", $link="")
+System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
+System(RutaSIT, "RutaSIT", $descr="Muestra la ubicación de los buses y el tiempo de llegada a cada paradero.", $tags="", $link="")
 
-person "==Pasajero\n<size:10>[Person]</size>\n\nPersona que consulta dónde está su bus y cuánto demora en llegar." <<Pasajero>> as Pasajero
-person "==Operador\n<size:10>[Person]</size>\n\nPersonal del SIT que supervisa los buses y atiende las alertas." <<Operador>> as Operador
-rectangle "==Dispositivos GPS de los buses\n<size:10>[Software System]</size>\n\nEnvían la posición de cada bus cada 10 segundos." <<DispositivosGPSdelosbuses>> as DispositivosGPSdelosbuses
-rectangle "==Proveedor de mapas\n<size:10>[Software System]</size>\n\nEntrega los mapas y calcula el tiempo de recorrido entre dos puntos." <<Proveedordemapas>> as Proveedordemapas
-rectangle "==RutaSIT\n<size:10>[Software System]</size>\n\nMuestra la ubicación de los buses y el tiempo de llegada a cada paradero." <<RutaSIT>> as RutaSIT
+Rel(Pasajero, RutaSIT, "Consulta dónde está su bus y cuánto demora en llegar", $techn="", $tags="", $link="")
+Rel(Operador, RutaSIT, "Supervisa los buses y atiende las alertas", $techn="", $tags="", $link="")
+Rel(DispositivosGPSdelosbuses, RutaSIT, "Envía la posición del bus", $techn="HTTPS/JSON", $tags="", $link="")
+Rel(RutaSIT, Proveedordemapas, "Pide mapas y tiempos de recorrido", $techn="HTTPS", $tags="", $link="")
 
-Pasajero .[#707070,thickness=2].> RutaSIT : "<color:#707070>Consulta dónde está su bus y cuánto demora en llegar"
-Operador .[#707070,thickness=2].> RutaSIT : "<color:#707070>Supervisa los buses y atiende las alertas"
-DispositivosGPSdelosbuses .[#707070,thickness=2].> RutaSIT : "<color:#707070>Envía la posición del bus\n<color:#707070><size:8>[HTTPS/JSON]</size>"
-RutaSIT .[#707070,thickness=2].> Proveedordemapas : "<color:#707070>Pide mapas y tiempos de recorrido\n<color:#707070><size:8>[HTTPS]</size>"
+SHOW_LEGEND(true)
+hide stereotypes
 @enduml

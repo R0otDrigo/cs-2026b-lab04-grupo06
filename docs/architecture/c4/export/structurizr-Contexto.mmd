@@ -1,7 +1,7 @@
 graph LR
   linkStyle default fill:#ffffff
 
-  subgraph diagram [RutaSIT - System Context]
+  subgraph diagram ["System Context View: RutaSIT"]
     style diagram fill:#ffffff,stroke:#ffffff
 
     1["<div style='font-weight: bold'>Pasajero</div><div style='font-size: 70%; margin-top: 0px'>[Person]</div><div style='font-size: 80%; margin-top:10px'>Persona que consulta dónde<br />está su bus y cuánto demora<br />en llegar.</div>"]
@@ -19,4 +19,5 @@ graph LR
     2-. "<div>Supervisa los buses y atiende<br />las alertas</div><div style='font-size: 70%'></div>" .->5
     3-. "<div>Envía la posición del bus</div><div style='font-size: 70%'>[HTTPS/JSON]</div>" .->5
     5-. "<div>Pide mapas y tiempos de<br />recorrido</div><div style='font-size: 70%'>[HTTPS]</div>" .->4
+
   end
