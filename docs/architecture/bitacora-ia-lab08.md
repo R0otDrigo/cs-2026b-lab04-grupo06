@@ -1,0 +1,13 @@
+# Bitácora de IA — Laboratorio 08 · RutaSIT Arequipa
+
+| # | Fecha | Herramienta | Prompt (resumen) | Qué propuso la IA | Qué verificamos o corregimos | Decisión |
+|---|-------|-------------|------------------|-------------------|------------------------------|----------|
+| 1 | 2026-10-27 | Claude | Prompt IA 1: escenarios de seis partes con (importancia, dificultad) para el crecimiento a 1200 buses y 50 000 consultas. | 7 escenarios para los 4 atributos. Calificó QA-02 y QA-04 como (H,H) y QA-06 como (H,M). | Tras simular se bajaron QA-02 y QA-04 a (H,M) (utilización de 0,5 y p95 de 67 ms sin caché) y QA-06 a (M,M) (ya hay HTTPS y no hay datos personales, R-05). | Corregida |
+| 2 | 2026-10-27 | Claude | Prompt IA 2: tácticas candidatas para QA-01 y QA-02 respetando el ADR-001. | Entre 5 conceptos, migrar a microservicios + Kubernetes + Kafka "para la campaña". | Simulación: índice + caché dan p95 de 41 ms a 28 req/s con 4 workers; el cambio de estilo viola R-01 y R-03. | Rechazada |
+| 3 | 2026-10-28 | Claude | Pregunta de diseño para QA-03: ¿bastan los reintentos y el respaldo del Lab 07? | "Reintentos + respaldo ya resuelven la caída del proveedor". | Monte Carlo con las clases reales: 0 consultas sin ETA, pero p95 de 6005 ms (> 1000 ms) y 50 811 llamadas. Se agregó el circuit breaker: p95 de 5 ms y 126 llamadas. | Corregida |
+| 4 | 2026-10-28 | Claude | Prompt IA 3: evaluador adversario del árbol, los ADR-006 a 008, el C4 y las simulaciones. | Riesgos R1 a R7 y dos afirmaciones: "Redis pierde datos al reiniciarse" y "sin cola se pierden consultas". | ADR-003: Redis solo guarda datos derivados que se reconstruyen desde PostgreSQL (FF-06: 67 ms con caché vacía). El ETA es una lectura y `ConRespaldo` siempre responde (FF-08). | Rechazada (falsos positivos) |
+| 5 | 2026-10-29 | Claude | Escribir las fitness functions y probarlas introduciendo violaciones. | 4 contratos de import-linter y 7 grupos de pruebas de calidad. | Al quitar el índice, FF-05 seguía en verde porque la caché lo tapaba; solo FF-06 (caché fría) falló. Las violaciones estructurales sí fallaron como se esperaba. | Aceptada |
+| 6 | 2026-10-29 | Claude | Alternativas de autenticación de dispositivos para el ADR-008. | Opción inicial: API key fija por operador. | Si se filtra vale siempre y no frena reenvíos; se eligió firma HMAC con marca de tiempo (FF-11: 0 de 1000 alteraciones aceptadas). | Rechazada |
+
+> Los supuestos de las simulaciones (tiempos de servicio) son estimaciones y no mediciones: ver add/iteracion-1.md y el riesgo R3.
+> No se incluyó información personal, credenciales ni claves de API en ningún prompt.
