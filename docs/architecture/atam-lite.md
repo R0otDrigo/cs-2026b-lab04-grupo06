@@ -41,12 +41,13 @@ Se aplicó el Prompt IA 3 (evaluador adversario) al árbol de utilidad, los ADR-
 | R7 Secreto filtrado | 2 | 4 | Fuera de la zona crítica | Rotación y límite de tasa |
 
 ## C. Evaluación cruzada (otro grupo)
-> Esta parte requiere la participación de otro grupo. Completar cuando el docente asigne los repositorios.
+> Evaluación del repositorio asignado al Grupo 06. La respuesta del grupo evaluado y la issue que recibamos se incorporarán cuando estén disponibles.
 
-- **Repositorio que evaluamos:** `<enlace>`
-- **Issue que abrimos (1 sensibilidad, 1 trade-off, 2 riesgos con probabilidad e impacto y 1 no riesgo):** `<enlace al issue>`
-- **Issue que recibimos:** `<enlace al issue>`
+- **Grupo evaluado:** Grupo 04 — CitaSalud Arequipa.
+- **Repositorio que evaluamos:** [ChristianAlexYana/cs-2026b-lab04-grupo4](https://github.com/ChristianAlexYana/cs-2026b-lab04-grupo4)
+- **Issue que abrimos:** [Evaluación cruzada de arquitectura — CitaSalud Arequipa (Lab 08)](https://github.com/ChristianAlexYana/cs-2026b-lab04-grupo4/issues/25)
+- **Issue que recibimos:** Pendiente de recibir del grupo que evalúa al Grupo 06.
 
 | Hallazgo recibido | ¿Aceptamos o refutamos? | Evidencia |
 |-------------------|-------------------------|-----------|
-| `<copiar aquí cada hallazgo>` | `<aceptado / refutado>` | `<evidencia>` |
+| Pendiente de recibir la issue del grupo evaluador | Pendiente | Se actualizará al recibir el issue y contrastar sus observaciones con el repositorio |
