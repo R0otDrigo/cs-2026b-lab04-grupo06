@@ -1,41 +1,90 @@
 @startuml
-title <size:24>Container View: RutaSIT</size>\n<size:24>Nivel 2: contenedores de RutaSIT; cada elemento indica entre corchetes el escenario [QA-xx] que atiende.</size>
-
 set separator none
+title RutaSIT - Containers
+
 left to right direction
 
-<style>
-  root {
-    BackgroundColor: #ffffff
-    FontColor: #444444
-  }
-</style>
-
-!include <C4/C4>
-!include <C4/C4_Context>
-!include <C4/C4_Container>
-
-Person(Pasajero, "Pasajero", $descr="Persona que consulta dónde está su bus y cuánto demora en llegar.", $tags="", $link="")
-Person(Operador, "Operador", $descr="Personal del SIT que supervisa los buses y atiende las alertas.", $tags="", $link="")
-System(DispositivosGPSdelosbuses, "Dispositivos GPS de los buses", $descr="Envían la posición de cada bus cada 10 segundos.", $tags="", $link="")
-System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
-
-System_Boundary("RutaSIT_boundary", "RutaSIT", $tags="") {
-  ContainerDb(RutaSIT.Basededatos, "Base de datos", $techn="PostgreSQL + PostGIS (índice GiST)", $descr="Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]", $tags="", $link="")
-  ContainerDb(RutaSIT.Caché, "Caché", $techn="Redis", $descr="Última posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]", $tags="", $link="")
-  Container(RutaSIT.Aplicaciónwebprogresiva, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
-  Container(RutaSIT.APIRutaSIT, "API RutaSIT", $techn="Python / Django", $descr="Monolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas. [QA-01, QA-02, QA-03, QA-05, QA-06]", $tags="", $link="")
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
 }
 
-Rel(Pasajero, RutaSIT.Aplicaciónwebprogresiva, "Usa", $techn="HTTPS", $tags="", $link="")
-Rel(Operador, RutaSIT.Aplicaciónwebprogresiva, "Usa", $techn="HTTPS", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT, "Hace consultas", $techn="HTTPS/JSON (REST)", $tags="", $link="")
-Rel(DispositivosGPSdelosbuses, RutaSIT.APIRutaSIT, "Envía su posición", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT, RutaSIT.Basededatos, "Lee y guarda viajes, posiciones y alertas", $techn="SQL/TCP", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT, RutaSIT.Caché, "Guarda y lee posiciones y tiempos de llegada", $techn="Redis protocol", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, Proveedordemapas, "Carga los mapas", $techn="HTTPS", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT, Proveedordemapas, "Pide el tiempo de recorrido", $techn="HTTPS/JSON", $tags="", $link="")
+hide stereotype
 
-SHOW_LEGEND(true)
-hide stereotypes
+skinparam rectangle<<RutaSIT.APIRutaSIT>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.Aplicaciónwebprogresiva>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam database<<RutaSIT.Basededatos>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam database<<RutaSIT.Caché>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam rectangle<<DispositivosGPSdelosbuses>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  shadowing false
+}
+skinparam person<<Operador>> {
+  BackgroundColor #08427b
+  FontColor #ffffff
+  BorderColor #052e56
+  shadowing false
+}
+skinparam person<<Pasajero>> {
+  BackgroundColor #08427b
+  FontColor #ffffff
+  BorderColor #052e56
+  shadowing false
+}
+skinparam rectangle<<Proveedordemapas>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  shadowing false
+}
+skinparam rectangle<<RutaSIT>> {
+  BorderColor #0b4884
+  FontColor #0b4884
+  shadowing false
+}
+
+person "==Pasajero\n<size:10>[Person]</size>\n\nPersona que consulta dónde está su bus y cuánto demora en llegar." <<Pasajero>> as Pasajero
+person "==Operador\n<size:10>[Person]</size>\n\nPersonal del SIT que supervisa los buses y atiende las alertas." <<Operador>> as Operador
+rectangle "==Dispositivos GPS de los buses\n<size:10>[Software System]</size>\n\nEnvían la posición de cada bus cada 10 segundos." <<DispositivosGPSdelosbuses>> as DispositivosGPSdelosbuses
+rectangle "==Proveedor de mapas\n<size:10>[Software System]</size>\n\nEntrega los mapas y calcula el tiempo de recorrido entre dos puntos." <<Proveedordemapas>> as Proveedordemapas
+
+rectangle "RutaSIT\n<size:10>[Software System]</size>" <<RutaSIT>> {
+  database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS (índice GiST)]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]" <<RutaSIT.Basededatos>> as RutaSIT.Basededatos
+  database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" <<RutaSIT.Caché>> as RutaSIT.Caché
+  rectangle "==Aplicación web progresiva\n<size:10>[Container: JavaScript + Service Worker]</size>\n\nMapa y consulta de llegadas para el pasajero; panel de alertas para el operador." <<RutaSIT.Aplicaciónwebprogresiva>> as RutaSIT.Aplicaciónwebprogresiva
+  rectangle "==API RutaSIT\n<size:10>[Container: Python / Django]</size>\n\nMonolito modular que recibe posiciones, calcula tiempos de llegada y genera alertas. [QA-01, QA-02, QA-03, QA-05, QA-06]" <<RutaSIT.APIRutaSIT>> as RutaSIT.APIRutaSIT
+}
+
+Pasajero .[#707070,thickness=2].> RutaSIT.Aplicaciónwebprogresiva : "<color:#707070>Usa\n<color:#707070><size:8>[HTTPS]</size>"
+Operador .[#707070,thickness=2].> RutaSIT.Aplicaciónwebprogresiva : "<color:#707070>Usa\n<color:#707070><size:8>[HTTPS]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT : "<color:#707070>Hace consultas\n<color:#707070><size:8>[HTTPS/JSON (REST)]</size>"
+DispositivosGPSdelosbuses .[#707070,thickness=2].> RutaSIT.APIRutaSIT : "<color:#707070>Envía su posición\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.APIRutaSIT .[#707070,thickness=2].> RutaSIT.Basededatos : "<color:#707070>Lee y guarda viajes, posiciones y alertas\n<color:#707070><size:8>[SQL/TCP]</size>"
+RutaSIT.APIRutaSIT .[#707070,thickness=2].> RutaSIT.Caché : "<color:#707070>Guarda y lee posiciones y tiempos de llegada\n<color:#707070><size:8>[Redis protocol]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> Proveedordemapas : "<color:#707070>Carga los mapas\n<color:#707070><size:8>[HTTPS]</size>"
+RutaSIT.APIRutaSIT .[#707070,thickness=2].> Proveedordemapas : "<color:#707070>Pide el tiempo de recorrido\n<color:#707070><size:8>[HTTPS/JSON]</size>"
 @enduml

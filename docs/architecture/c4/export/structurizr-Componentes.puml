@@ -1,63 +1,126 @@
 @startuml
-title <size:24>Component View: RutaSIT - API RutaSIT</size>\n<size:24>Nivel 3: módulos de la API.</size>
-
 set separator none
+title RutaSIT - API RutaSIT - Components
+
 left to right direction
 
-<style>
-  root {
-    BackgroundColor: #ffffff
-    FontColor: #444444
-  }
-</style>
-
-!include <C4/C4>
-!include <C4/C4_Context>
-!include <C4/C4_Container>
-!include <C4/C4_Component>
-
-System(DispositivosGPSdelosbuses, "Dispositivos GPS de los buses", $descr="Envían la posición de cada bus cada 10 segundos.", $tags="", $link="")
-System(Proveedordemapas, "Proveedor de mapas", $descr="Entrega los mapas y calcula el tiempo de recorrido entre dos puntos.", $tags="", $link="")
-
-System_Boundary("RutaSIT_boundary", "RutaSIT", $tags="") {
-  Container_Boundary("RutaSIT.APIRutaSIT_boundary", "API RutaSIT", $tags="") {
-    Component(RutaSIT.APIRutaSIT.MóduloETA, "Módulo ETA", $techn="Django app", $descr="Calcula el tiempo de llegada con reintentos, circuit breaker y respaldo por velocidad. [QA-01, QA-03]", $tags="", $link="")
-    Component(RutaSIT.APIRutaSIT.MóduloAlertas, "Módulo Alertas", $techn="Django app", $descr="Avisa al operador de desvíos y de buses sin señal.", $tags="", $link="")
-    Component(RutaSIT.APIRutaSIT.MóduloRutas, "Módulo Rutas", $techn="Django app", $descr="Administra las rutas y los paraderos.", $tags="", $link="")
-    Component(RutaSIT.APIRutaSIT.MóduloSeguridad, "Módulo Seguridad", $techn="Django app", $descr="Verifica la firma de cada posición (HMAC) y filtra los datos por operador. [QA-05, QA-06]", $tags="", $link="")
-    Component(RutaSIT.APIRutaSIT.MóduloIngesta, "Módulo Ingesta", $techn="Django app", $descr="Recibe la posición de cada bus, verifica su firma y recalcula el ETA con la estrategia rápida (por velocidad). [QA-02, QA-06]", $tags="", $link="")
-    Component(RutaSIT.APIRutaSIT.MóduloSeguimiento, "Módulo Seguimiento", $techn="Django app", $descr="Guarda los viajes y sus posiciones y controla su estado.", $tags="", $link="")
-  }
-
-  ContainerDb(RutaSIT.Basededatos, "Base de datos", $techn="PostgreSQL + PostGIS (índice GiST)", $descr="Rutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]", $tags="", $link="")
-  ContainerDb(RutaSIT.Caché, "Caché", $techn="Redis", $descr="Última posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]", $tags="", $link="")
-  Container(RutaSIT.Aplicaciónwebprogresiva, "Aplicación web progresiva", $techn="JavaScript + Service Worker", $descr="Mapa y consulta de llegadas para el pasajero; panel de alertas para el operador.", $tags="", $link="")
+skinparam {
+  arrowFontSize 10
+  defaultTextAlignment center
+  wrapWidth 200
+  maxMessageSize 100
 }
 
-Rel(RutaSIT.Aplicaciónwebprogresiva, Proveedordemapas, "Carga los mapas", $techn="HTTPS", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Consulta la posición de los buses", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloETA, "Consulta el tiempo de llegada", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloRutas, "Consulta rutas y paraderos", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloAlertas, "Consulta las alertas (operador)", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(DispositivosGPSdelosbuses, RutaSIT.APIRutaSIT.MóduloIngesta, "Envía su posición", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Registra la posición del viaje", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.APIRutaSIT.MóduloAlertas, "Avisa si hay un desvío", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Busca los viajes activos y su última posición", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloRutas, "Lee los paraderos", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.APIRutaSIT.MóduloAlertas, "Avisa si los buses no tienen señal", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloAlertas, RutaSIT.APIRutaSIT.MóduloSeguimiento, "Lee los viajes", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloSeguimiento, RutaSIT.APIRutaSIT.MóduloRutas, "Usa la ruta del viaje", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloSeguimiento, RutaSIT.Basededatos, "Lee y guarda viajes y posiciones", $techn="SQL/TCP", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloRutas, RutaSIT.Basededatos, "Lee y guarda rutas y paraderos", $techn="SQL/TCP", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloAlertas, RutaSIT.Basededatos, "Guarda las alertas", $techn="SQL/TCP", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.Caché, "Guarda la última posición", $techn="Redis protocol", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloETA, RutaSIT.Caché, "Guarda y lee tiempos de llegada", $techn="Redis protocol", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloETA, Proveedordemapas, "Pide el tiempo de recorrido", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.Aplicaciónwebprogresiva, RutaSIT.APIRutaSIT.MóduloSeguridad, "Inicia sesión (operador)", $techn="HTTPS/JSON", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloIngesta, RutaSIT.APIRutaSIT.MóduloSeguridad, "Verifica la firma del dispositivo", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloSeguimiento, RutaSIT.APIRutaSIT.MóduloSeguridad, "Filtra los viajes por operador", $techn="Python (llamada interna)", $tags="", $link="")
-Rel(RutaSIT.APIRutaSIT.MóduloSeguridad, RutaSIT.Basededatos, "Lee los operadores y sus secretos", $techn="SQL/TCP", $tags="", $link="")
+hide stereotype
 
-SHOW_LEGEND(true)
-hide stereotypes
+skinparam rectangle<<RutaSIT.Aplicaciónwebprogresiva>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam database<<RutaSIT.Basededatos>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam database<<RutaSIT.Caché>> {
+  BackgroundColor #438dd5
+  FontColor #ffffff
+  BorderColor #2e6295
+  shadowing false
+}
+skinparam rectangle<<DispositivosGPSdelosbuses>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloAlertas>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloETA>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloIngesta>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloRutas>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloSeguimiento>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT.MóduloSeguridad>> {
+  BackgroundColor #85bbf0
+  FontColor #000000
+  BorderColor #5d82a8
+  shadowing false
+}
+skinparam rectangle<<Proveedordemapas>> {
+  BackgroundColor #999999
+  FontColor #ffffff
+  BorderColor #6b6b6b
+  shadowing false
+}
+skinparam rectangle<<RutaSIT.APIRutaSIT>> {
+  BorderColor #2e6295
+  FontColor #2e6295
+  shadowing false
+}
+
+database "==Base de datos\n<size:10>[Container: PostgreSQL + PostGIS (índice GiST)]</size>\n\nRutas, paraderos, viajes, posiciones y alertas (un esquema por módulo). Índice espacial y filtro obligatorio por operador. [QA-01, QA-05]" <<RutaSIT.Basededatos>> as RutaSIT.Basededatos
+rectangle "==Dispositivos GPS de los buses\n<size:10>[Software System]</size>\n\nEnvían la posición de cada bus cada 10 segundos." <<DispositivosGPSdelosbuses>> as DispositivosGPSdelosbuses
+database "==Caché\n<size:10>[Container: Redis]</size>\n\nÚltima posición de cada bus y ETA por paradero con TTL de 10 s; si se vacía, se reconstruye desde PostgreSQL. [QA-01, QA-04]" <<RutaSIT.Caché>> as RutaSIT.Caché
+rectangle "==Proveedor de mapas\n<size:10>[Software System]</size>\n\nEntrega los mapas y calcula el tiempo de recorrido entre dos puntos." <<Proveedordemapas>> as Proveedordemapas
+rectangle "==Aplicación web progresiva\n<size:10>[Container: JavaScript + Service Worker]</size>\n\nMapa y consulta de llegadas para el pasajero; panel de alertas para el operador." <<RutaSIT.Aplicaciónwebprogresiva>> as RutaSIT.Aplicaciónwebprogresiva
+
+rectangle "API RutaSIT\n<size:10>[Container: Python / Django]</size>" <<RutaSIT.APIRutaSIT>> {
+  rectangle "==Módulo ETA\n<size:10>[Component: Django app]</size>\n\nCalcula el tiempo de llegada con reintentos, circuit breaker y respaldo por velocidad. [QA-01, QA-03]" <<RutaSIT.APIRutaSIT.MóduloETA>> as RutaSIT.APIRutaSIT.MóduloETA
+  rectangle "==Módulo Alertas\n<size:10>[Component: Django app]</size>\n\nAvisa al operador de desvíos y de buses sin señal." <<RutaSIT.APIRutaSIT.MóduloAlertas>> as RutaSIT.APIRutaSIT.MóduloAlertas
+  rectangle "==Módulo Rutas\n<size:10>[Component: Django app]</size>\n\nAdministra las rutas y los paraderos." <<RutaSIT.APIRutaSIT.MóduloRutas>> as RutaSIT.APIRutaSIT.MóduloRutas
+  rectangle "==Módulo Seguridad\n<size:10>[Component: Django app]</size>\n\nVerifica la firma de cada posición (HMAC) y filtra los datos por operador. [QA-05, QA-06]" <<RutaSIT.APIRutaSIT.MóduloSeguridad>> as RutaSIT.APIRutaSIT.MóduloSeguridad
+  rectangle "==Módulo Ingesta\n<size:10>[Component: Django app]</size>\n\nRecibe la posición de cada bus, verifica su firma y recalcula el ETA con la estrategia rápida (por velocidad). [QA-02, QA-06]" <<RutaSIT.APIRutaSIT.MóduloIngesta>> as RutaSIT.APIRutaSIT.MóduloIngesta
+  rectangle "==Módulo Seguimiento\n<size:10>[Component: Django app]</size>\n\nGuarda los viajes y sus posiciones y controla su estado." <<RutaSIT.APIRutaSIT.MóduloSeguimiento>> as RutaSIT.APIRutaSIT.MóduloSeguimiento
+}
+
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> Proveedordemapas : "<color:#707070>Carga los mapas\n<color:#707070><size:8>[HTTPS]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguimiento : "<color:#707070>Consulta la posición de los buses\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloETA : "<color:#707070>Consulta el tiempo de llegada\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloRutas : "<color:#707070>Consulta rutas y paraderos\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloAlertas : "<color:#707070>Consulta las alertas (operador)\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+DispositivosGPSdelosbuses .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloIngesta : "<color:#707070>Envía su posición\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.APIRutaSIT.MóduloIngesta .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguimiento : "<color:#707070>Registra la posición del viaje\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloIngesta .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloAlertas : "<color:#707070>Avisa si hay un desvío\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguimiento : "<color:#707070>Busca los viajes activos y su última posición\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloRutas : "<color:#707070>Lee los paraderos\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloAlertas : "<color:#707070>Avisa si los buses no tienen señal\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloAlertas .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguimiento : "<color:#707070>Lee los viajes\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloSeguimiento .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloRutas : "<color:#707070>Usa la ruta del viaje\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloSeguimiento .[#707070,thickness=2].> RutaSIT.Basededatos : "<color:#707070>Lee y guarda viajes y posiciones\n<color:#707070><size:8>[SQL/TCP]</size>"
+RutaSIT.APIRutaSIT.MóduloRutas .[#707070,thickness=2].> RutaSIT.Basededatos : "<color:#707070>Lee y guarda rutas y paraderos\n<color:#707070><size:8>[SQL/TCP]</size>"
+RutaSIT.APIRutaSIT.MóduloAlertas .[#707070,thickness=2].> RutaSIT.Basededatos : "<color:#707070>Guarda las alertas\n<color:#707070><size:8>[SQL/TCP]</size>"
+RutaSIT.APIRutaSIT.MóduloIngesta .[#707070,thickness=2].> RutaSIT.Caché : "<color:#707070>Guarda la última posición\n<color:#707070><size:8>[Redis protocol]</size>"
+RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> RutaSIT.Caché : "<color:#707070>Guarda y lee tiempos de llegada\n<color:#707070><size:8>[Redis protocol]</size>"
+RutaSIT.APIRutaSIT.MóduloETA .[#707070,thickness=2].> Proveedordemapas : "<color:#707070>Pide el tiempo de recorrido\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.Aplicaciónwebprogresiva .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguridad : "<color:#707070>Inicia sesión (operador)\n<color:#707070><size:8>[HTTPS/JSON]</size>"
+RutaSIT.APIRutaSIT.MóduloIngesta .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguridad : "<color:#707070>Verifica la firma del dispositivo\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloSeguimiento .[#707070,thickness=2].> RutaSIT.APIRutaSIT.MóduloSeguridad : "<color:#707070>Filtra los viajes por operador\n<color:#707070><size:8>[Python (llamada interna)]</size>"
+RutaSIT.APIRutaSIT.MóduloSeguridad .[#707070,thickness=2].> RutaSIT.Basededatos : "<color:#707070>Lee los operadores y sus secretos\n<color:#707070><size:8>[SQL/TCP]</size>"
 @enduml
