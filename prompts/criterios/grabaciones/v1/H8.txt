@@ -1,0 +1,64 @@
+## Criterios de aceptación
+
+**Historia de usuario:** Como desarrollador, quiero migrar el sistema a microservicios con Kafka y Kubernetes.
+
+Esta historia es muy grande (más bien una épica), así que los criterios están agrupados por área. Cada uno es verificable.
+
+### 1. Descomposición en microservicios
+- [ ] El monolito queda dividido en microservicios alineados a contextos de negocio, y cada uno tiene una responsabilidad documentada.
+- [ ] Cada microservicio tiene su propio repositorio o módulo, su pipeline de build y su ciclo de despliegue independiente.
+- [ ] Cada microservicio es dueño de sus datos. Ningún servicio accede directamente a la base de datos de otro.
+- [ ] Los servicios se comunican solo mediante APIs versionadas (REST/gRPC) o eventos en Kafka.
+- [ ] Existe un API Gateway como único punto de entrada para los clientes externos.
+
+### 2. Mensajería con Kafka
+- [ ] El clúster de Kafka está desplegado con al menos 3 brokers y un factor de replicación de 3 en los topics críticos.
+- [ ] Cada topic tiene definidos su esquema (Avro/Protobuf/JSON Schema), su política de retención y su número de particiones.
+- [ ] Los productores publican eventos de forma confiable (`acks=all`, idempotencia habilitada).
+- [ ] Los consumidores son idempotentes: procesar el mismo evento dos veces no genera datos duplicados ni inconsistentes.
+- [ ] Los mensajes que fallan tras los reintentos configurados van a un Dead Letter Topic y generan una alerta.
+- [ ] Los esquemas de eventos son compatibles hacia atrás y esto se valida en el pipeline de CI.
+
+### 3. Contenedores y Kubernetes
+- [ ] Cada servicio tiene una imagen Docker versionada, ligera y sin vulnerabilidades críticas (escaneo en CI).
+- [ ] Cada servicio se despliega en Kubernetes con manifiestos o Helm charts versionados en el repositorio.
+- [ ] Todos los pods definen requests/limits de CPU y memoria, y probes de liveness y readiness.
+- [ ] El autoescalado horizontal (HPA) está configurado y probado bajo carga.
+- [ ] La configuración y los secretos se gestionan con ConfigMaps y Secrets (o un gestor externo), sin credenciales en el código ni en las imágenes.
+- [ ] Existen entornos separados (dev, staging, producción) con namespaces o clústeres independientes.
+
+### 4. Migración y continuidad del servicio
+- [ ] La migración es incremental (por ejemplo, patrón Strangler Fig). El sistema sigue operativo durante todo el proceso.
+- [ ] Hay un plan de migración de datos validado, con verificación de integridad (conteos y checksums) entre origen y destino.
+- [ ] Existe un plan de rollback probado para cada servicio migrado.
+- [ ] No hay pérdida de datos ni de funcionalidad respecto al sistema actual, comprobado con pruebas de regresión.
+- [ ] El tiempo de inactividad durante el corte de cada servicio no supera el acordado (por ejemplo, 0 minutos con despliegue blue/green o canary).
+
+### 5. Calidad y pruebas
+- [ ] Cobertura de pruebas unitarias mínima acordada (por ejemplo, 80%) en cada servicio.
+- [ ] Pruebas de contrato entre servicios (por ejemplo, Pact) integradas en CI.
+- [ ] Pruebas de integración end-to-end de los flujos críticos pasan en staging.
+- [ ] Pruebas de carga demuestran que el sistema cumple o supera el rendimiento del monolito (latencia p95 y throughput definidos).
+- [ ] Pruebas de resiliencia (caída de un pod, de un broker, de un servicio) confirman que el sistema se recupera sin pérdida de mensajes.
+
+### 6. Observabilidad y operación
+- [ ] Logs centralizados y estructurados, con un identificador de correlación que permite seguir una petición entre servicios.
+- [ ] Métricas por servicio (latencia, errores, throughput, lag de consumidores de Kafka) visibles en dashboards.
+- [ ] Trazas distribuidas habilitadas (por ejemplo, OpenTelemetry).
+- [ ] Alertas configuradas para errores, saturación y consumer lag alto, con responsables asignados.
+- [ ] Existen runbooks para los incidentes más probables.
+
+### 7. Seguridad
+- [ ] La comunicación entre servicios y con Kafka usa TLS, y la autenticación y autorización están configuradas (por ejemplo, mTLS, ACLs en Kafka, RBAC en Kubernetes).
+- [ ] Los contenedores se ejecutan sin privilegios de root y se aplican Network Policies.
+- [ ] Las dependencias se analizan en CI y no hay vulnerabilidades críticas abiertas.
+
+### 8. CI/CD y documentación
+- [ ] Cada servicio se construye, prueba y despliega automáticamente mediante un pipeline CI/CD.
+- [ ] Los despliegues a producción se hacen sin intervención manual en los servidores (GitOps o pipeline automatizado).
+- [ ] Hay documentación actualizada: arquitectura, diagrama de servicios y eventos, contratos de API/eventos y guía de despliegue.
+
+### Definición de terminado
+La historia se considera completa cuando todos los servicios definidos están en producción en Kubernetes, el monolito está apagado (o aislado y con fecha de retiro), no hay incidentes críticos abiertos y el equipo ha aceptado la documentación y los runbooks.
+
+**Recomendación:** dado su tamaño, conviene dividir esta historia en historias más pequeñas (por ejemplo, una por servicio o por capacidad: "desplegar el clúster de Kafka", "migrar el servicio de pagos", "configurar la observabilidad"), cada una con sus propios criterios tomados de esta lista. Si me indicas el dominio del sistema, puedo adaptarlos y escribirlos en formato Gherkin (Dado/Cuando/Entonces).

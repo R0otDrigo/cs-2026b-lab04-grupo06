@@ -1,0 +1,43 @@
+**Historia de usuario:** Como operador, quiero recibir una alerta cuando un bus se desvía de su ruta para llamar al conductor y corregirlo.
+
+## Criterios de aceptación
+
+**1. Detección de la desviación**
+- **Dado** un bus en servicio con una ruta asignada, **cuando** su posición GPS se aleja más de un umbral configurable (por ejemplo, 100 m) del trazado de la ruta durante un tiempo mínimo (por ejemplo, 30 s), **entonces** el sistema registra una desviación y genera una alerta.
+- **Dado** que la posición GPS fluctúa por error de precisión o por una breve pérdida de señal, **cuando** la separación de la ruta no supera el umbral o no se mantiene durante el tiempo mínimo, **entonces** el sistema no genera alerta.
+- **Dado** un bus que no está en servicio (en cochera, fuera de turno o sin ruta asignada), **cuando** se mueve, **entonces** no se genera alerta.
+- **Dado** un desvío autorizado (desvío programado, obra, cierre de vía), **cuando** el bus sigue el trazado alterno registrado, **entonces** no se genera alerta.
+
+**2. Contenido de la alerta**
+- **Dado** que se genera una alerta, **cuando** el operador la recibe, **entonces** muestra como mínimo: identificador del bus, ruta asignada, nombre del conductor, ubicación actual en el mapa, distancia respecto a la ruta, hora de inicio de la desviación y teléfono de contacto del conductor.
+
+**3. Entrega y tiempo de respuesta**
+- **Dado** que se confirmó una desviación, **cuando** el sistema la detecta, **entonces** la alerta llega al panel del operador en un máximo de 10 segundos.
+- **Dado** que la alerta se muestra, **entonces** se distingue visualmente de otras notificaciones (color, sonido o indicador de prioridad) y permanece visible hasta que el operador la atienda.
+- **Dado** que hay varios operadores conectados, **cuando** se genera la alerta, **entonces** la reciben los operadores responsables de esa ruta o zona, sin duplicados para un mismo evento.
+
+**4. Acciones del operador**
+- **Dado** una alerta activa, **cuando** el operador la abre, **entonces** puede ver la posición del bus en tiempo real y el recorrido que ha seguido desde que se desvió.
+- **Dado** una alerta activa, **cuando** el operador pulsa la opción de llamar, **entonces** el sistema inicia la llamada al conductor o muestra su número de contacto.
+- **Dado** que el operador habló con el conductor, **cuando** cierra la alerta, **entonces** debe indicar un resultado (corregido, desvío justificado, sin respuesta, otro) y puede añadir una nota.
+
+**5. Seguimiento y cierre**
+- **Dado** una alerta abierta, **cuando** el bus vuelve a la ruta (dentro del umbral durante el tiempo mínimo), **entonces** el sistema marca la desviación como resuelta y lo notifica al operador.
+- **Dado** una alerta abierta que no ha sido atendida, **cuando** pasa un tiempo configurable (por ejemplo, 2 minutos), **entonces** la alerta se escala (se repite o se envía a un supervisor).
+- **Dado** una desviación que continúa, **entonces** no se generan alertas repetidas para el mismo evento, solo se actualiza la existente.
+
+**6. Registro y trazabilidad**
+- **Dado** cualquier alerta, **entonces** el sistema guarda un historial con fecha, bus, conductor, duración de la desviación, operador que la atendió, resultado y notas, consultable y filtrable por fecha, bus, ruta y conductor.
+
+**7. Configuración**
+- **Dado** un usuario con rol de administrador, **cuando** accede a la configuración, **entonces** puede ajustar el umbral de distancia, el tiempo mínimo de confirmación y el tiempo de escalamiento, por ruta o de forma global.
+
+**8. Casos límite**
+- **Dado** que el bus pierde la señal GPS, **cuando** pasa más de un tiempo configurable sin datos, **entonces** el sistema genera una alerta distinta de "sin señal", que no se confunde con una desviación.
+- **Dado** que no hay operadores conectados, **cuando** se genera una alerta, **entonces** queda pendiente y se muestra al primer operador que inicie sesión, o se envía al supervisor.
+
+## Fuera de alcance (sugerido)
+- Corrección automática de la ruta o comunicación automática con el conductor.
+- Sanciones o evaluación del desempeño del conductor.
+
+Si me indicas el contexto (tecnología, tiempos de actualización del GPS, canal de alertas como panel web, SMS o app), puedo ajustar los valores y añadir criterios más específicos.

@@ -1,0 +1,32 @@
+# Evaluación de la Tarea A: criterios de aceptación en Gherkin (RutaSIT).
+# Ejecutar desde la carpeta prompts/:
+#   npx promptfoo eval -c criterios/promptfooconfig.yaml --no-cache -o criterios/resultados.json
+description: "Tarea A - criterios de aceptación (RutaSIT)"
+prompts:
+  - id: file://v1.txt
+    label: v1
+  - id: file://v2.txt
+    label: v2
+  - id: file://v3.txt
+    label: v3
+  - id: file://v4.txt
+    label: v4
+providers:
+  - id: file://../proveedor_grabado.py
+    label: asistente-grabado
+    config:
+      carpeta: criterios
+defaultTest:
+  assert:
+    - type: is-json                     # A1: contrato de salida
+      value: file://esquema.json
+      metric: A1_contrato_json
+    - type: javascript                  # A3: los ESCENARIOS describen comportamiento, no implementación
+      metric: A3_sin_implementacion
+      value: |
+        const prohibidas = /\b(postgresql|postgis|django|redis|endpoint|tabla|api|base de datos|json|sql|http|https|kafka|kubernetes|microservicios?)\b/i;
+        let texto = output;
+        try { texto = JSON.stringify(JSON.parse(output).escenarios || []); } catch (e) {}
+        return !prohibidas.test(texto);
+tests:
+  - file://casos.yaml

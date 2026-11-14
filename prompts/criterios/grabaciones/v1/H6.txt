@@ -1,0 +1,66 @@
+**Historia de usuario:** Como operador, quiero que el sistema reciba la posición de cada bus cada 10 segundos para ver su ubicación actualizada.
+
+## Criterios de aceptación
+
+**1. Recepción periódica de posición**
+- **Dado** que un bus está en servicio y tiene el rastreo activo,
+- **cuando** transcurren 10 segundos desde su último reporte,
+- **entonces** el sistema recibe una nueva posición de ese bus (se tolera una variación de ±1 segundo en el intervalo).
+
+**2. Contenido mínimo de cada reporte**
+- **Dado** que el sistema recibe un reporte de posición,
+- **cuando** se valida su contenido,
+- **entonces** incluye al menos: identificador del bus, latitud, longitud y marca de tiempo (timestamp) del momento de la captura.
+
+**3. Cobertura de toda la flota**
+- **Dado** que hay varios buses en servicio al mismo tiempo,
+- **cuando** el sistema recibe reportes,
+- **entonces** procesa la posición de cada bus de forma independiente, sin que el retraso o la falla de uno afecte a los demás.
+
+**4. Visualización actualizada para el operador**
+- **Dado** que el operador tiene abierta la vista de mapa o de monitoreo,
+- **cuando** llega una nueva posición de un bus,
+- **entonces** el marcador de ese bus se actualiza en pantalla sin que el operador recargue la página, y la ubicación mostrada no tiene más de 15 segundos de antigüedad en condiciones normales.
+
+**5. Indicador de última actualización**
+- **Dado** que el operador consulta un bus,
+- **cuando** ve su detalle,
+- **entonces** puede ver la hora de la última posición recibida.
+
+**6. Pérdida de señal**
+- **Dado** que un bus no envía su posición,
+- **cuando** pasan más de 30 segundos (3 intervalos) sin recibir reportes,
+- **entonces** el sistema marca a ese bus como "sin señal" en la vista del operador, conserva su última posición conocida y muestra la hora de ese último reporte.
+
+**7. Recuperación de señal**
+- **Dado** que un bus estaba marcado como "sin señal",
+- **cuando** vuelve a enviar una posición válida,
+- **entonces** el sistema quita el estado "sin señal" y reanuda la actualización normal.
+
+**8. Datos inválidos**
+- **Dado** que llega un reporte con coordenadas fuera de rango, campos faltantes o marca de tiempo inválida,
+- **cuando** el sistema lo valida,
+- **entonces** lo descarta, registra el error en el log y no modifica la última posición válida del bus.
+
+**9. Reportes duplicados o desordenados**
+- **Dado** que llega un reporte con una marca de tiempo anterior a la última posición registrada del bus,
+- **cuando** el sistema lo procesa,
+- **entonces** no sobrescribe la posición más reciente (se guarda en el historial si corresponde).
+
+**10. Almacenamiento del historial**
+- **Dado** que se recibe una posición válida,
+- **cuando** el sistema la procesa,
+- **entonces** la guarda con su marca de tiempo para consulta posterior (el periodo de retención se define con el equipo de producto).
+
+## Criterios no funcionales sugeridos
+
+- **Rendimiento:** el sistema soporta la carga de toda la flota reportando cada 10 s (por ejemplo, 100 buses equivalen a unos 10 mensajes por segundo) sin degradar el tiempo de actualización.
+- **Latencia:** el tiempo entre la recepción de la posición y su visualización es menor a 2 segundos.
+- **Disponibilidad:** la recepción de posiciones no se interrumpe por la caída de una vista de operador.
+
+## Preguntas abiertas para el equipo
+
+- ¿Cuántos buses debe soportar el sistema y con qué crecimiento esperado?
+- ¿Cuánto tiempo debe conservarse el historial de posiciones?
+- ¿Qué tolerancia exacta se acepta en el intervalo de 10 segundos?
+- ¿Qué debe ver el operador si el bus está fuera de servicio y no debería reportar?
