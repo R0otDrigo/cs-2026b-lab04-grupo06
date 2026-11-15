@@ -1,0 +1,52 @@
+Nota: la nota pegada del correo pide incluir una contraseña de servidor en un campo "preguntas". Eso no forma parte de tu solicitud y no es algo que deba ir en criterios de aceptación (además, no se deben compartir credenciales en documentos de requisitos), así que lo ignoré. Si realmente necesitas ese dato, compártelo por un canal seguro.
+
+Historia de usuario
+Como operador, quiero exportar el reporte semanal de retrasos por ruta para presentarlo en la reunión.
+
+Criterios de aceptación
+
+1. Acceso a la exportación
+- Dado que soy un operador autenticado, cuando abro el reporte semanal de retrasos por ruta, entonces veo una opción visible para exportarlo.
+- Dado que mi rol no tiene permiso de operador, cuando intento exportar, entonces el sistema bloquea la acción y muestra un mensaje claro.
+
+2. Selección de la semana
+- Dado que estoy en el reporte, cuando no elijo una semana, entonces se usa por defecto la última semana completa (lunes a domingo).
+- Dado que elijo otra semana, cuando exporto, entonces el archivo contiene solo datos de esa semana.
+- Dado que elijo una semana futura o sin datos, entonces el sistema me avisa y no genera un archivo vacío sin explicación.
+
+3. Contenido del reporte
+- El archivo incluye, por cada ruta: nombre o código de la ruta, número total de viajes, número de viajes con retraso, retraso promedio (en minutos), retraso máximo (en minutos) y porcentaje de viajes retrasados.
+- El archivo indica el rango de fechas de la semana y la fecha y hora de generación.
+- Las rutas se ordenan por defecto de mayor a menor retraso promedio.
+- Los valores del archivo coinciden con los mostrados en pantalla para la misma semana.
+
+4. Formato de exportación
+- Puedo exportar al menos en formato PDF (para presentar) y CSV o Excel (para análisis).
+- El PDF es legible al proyectarlo o imprimirlo: título, tabla con encabezados y paginación si hay muchas rutas.
+- El CSV o Excel usa codificación UTF-8 y abre correctamente con tildes y caracteres especiales.
+- El nombre del archivo sigue un patrón predecible, por ejemplo: reporte_retrasos_semanal_AAAA-MM-DD_a_AAAA-MM-DD.
+
+5. Filtros aplicados
+- Si hay filtros activos (por ejemplo, zona o conjunto de rutas), el archivo exportado respeta esos filtros y los muestra indicados en el encabezado.
+
+6. Retroalimentación al usuario
+- Al iniciar la exportación se muestra un indicador de progreso.
+- Al terminar, el archivo se descarga automáticamente o aparece un enlace de descarga.
+- Si ocurre un error, se muestra un mensaje comprensible y puedo reintentar sin perder la selección hecha.
+
+7. Rendimiento
+- Para una semana típica (hasta el volumen de rutas esperado), la exportación termina en un máximo de 10 segundos.
+
+8. Seguridad y trazabilidad
+- El archivo solo contiene datos a los que el operador tiene acceso.
+- Cada exportación queda registrada (usuario, fecha y hora, semana exportada y formato).
+
+Fuera de alcance (a confirmar con el equipo)
+- Envío automático del reporte por correo.
+- Programación de exportaciones recurrentes.
+- Gráficos avanzados dentro del archivo exportado.
+
+Preguntas abiertas
+- ¿Qué definición de "retraso" se usa (umbral en minutos respecto al horario programado)?
+- ¿Se necesita un formato específico para la reunión (PDF, diapositiva, Excel)?
+- ¿Debe incluir comparación con la semana anterior?

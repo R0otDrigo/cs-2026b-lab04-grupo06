@@ -1,0 +1,33 @@
+Historia de usuario: Como pasajero, quiero recibir un aviso cuando mi bus esté a 2 paraderos de distancia.
+
+Criterios de aceptación
+
+1. Activación del aviso
+   - Dado que el pasajero tiene activado el seguimiento de un bus y las notificaciones habilitadas,
+     cuando el bus se encuentra a 2 paraderos del paradero del pasajero,
+     entonces el sistema envía un aviso al pasajero.
+
+2. Contenido del aviso
+   - El aviso indica la línea o ruta del bus, el nombre del paradero de destino y que el bus está a 2 paraderos.
+   - Opcionalmente muestra el tiempo estimado de llegada.
+
+3. Una sola notificación por viaje
+   - El aviso se envía una única vez por cada bus y paradero. Si el bus sigue avanzando o se detiene, no se repite.
+
+4. Bus que ya pasó o se desvía
+   - Si el bus se salta el umbral (por ejemplo, pasa de 3 paraderos a 1), el aviso se envía igualmente al detectar que está a 2 paraderos o menos, sin retrasarse.
+   - Si el bus cambia de ruta o deja de pasar por el paradero, no se envía el aviso.
+
+5. Tiempo de entrega
+   - El aviso llega al pasajero en un máximo de 10 segundos desde que el sistema detecta que el bus está a 2 paraderos.
+
+6. Sin permisos o sin conexión
+   - Si el pasajero tiene las notificaciones desactivadas, la aplicación muestra un mensaje invitándolo a habilitarlas.
+   - Si no hay datos de ubicación del bus, no se envía el aviso y no se muestra información falsa.
+
+7. Control del usuario
+   - El pasajero puede activar, desactivar o cancelar el aviso para un bus o paradero concreto.
+   - Si cancela el seguimiento, no recibe más avisos de ese bus.
+
+8. Privacidad
+   - El aviso no expone datos personales de otros pasajeros ni del conductor.
