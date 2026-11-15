@@ -1,0 +1,185 @@
+Aquí tienes un conjunto de pruebas pytest para `ConRespaldo`. Uso dobles de prueba simples (fakes) en lugar de mocks pesados, así las pruebas quedan legibles y no dependen de la implementación real de las estrategias. Ajusta la línea de `import` a la ruta real de tu módulo.
+
+```python
+import pytest
+
+from eta import ConRespaldo, EstrategiaEta  # ajusta al módulo real
+
+
+# ---------- Dobles de prueba ----------
+
+class EstrategiaFija(EstrategiaEta):
+    """Devuelve siempre el mismo valor y registra las llamadas."""
+
+    def __init__(self, resultado):
+        self.resultado = resultado
+        self.llamadas = []
+
+    def estimar(self, pos, paradero):
+        self.llamadas.append((pos, paradero))
+        return self.resultado
+
+
+class EstrategiaQueFalla(EstrategiaEta):
+    """Lanza la excepción indicada y registra las llamadas."""
+
+    def __init__(self, excepcion):
+        self.excepcion = excepcion
+        self.llamadas = []
+
+    def estimar(self, pos, paradero):
+        self.llamadas.append((pos, paradero))
+        raise self.excepcion
+
+
+POS = (-16.409, -71.537)  # ejemplo: Arequipa
+PARADERO = "P-042"
+
+
+# ---------- Camino feliz ----------
+
+def test_devuelve_resultado_de_la_principal_si_no_falla():
+    principal = EstrategiaFija(120)
+    respaldo = EstrategiaFija(999)
+
+    resultado = ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert resultado == 120
+
+
+def test_no_invoca_al_respaldo_si_la_principal_funciona():
+    principal = EstrategiaFija(120)
+    respaldo = EstrategiaFija(999)
+
+    ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert respaldo.llamadas == []
+
+
+def test_pasa_los_argumentos_a_la_principal():
+    principal = EstrategiaFija(120)
+    respaldo = EstrategiaFija(999)
+
+    ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert principal.llamadas == [(POS, PARADERO)]
+
+
+# ---------- Fallback por TimeoutError ----------
+
+def test_usa_el_respaldo_si_la_principal_lanza_timeout():
+    principal = EstrategiaQueFalla(TimeoutError("sin respuesta"))
+    respaldo = EstrategiaFija(300)
+
+    resultado = ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert resultado == 300
+
+
+def test_pasa_los_mismos_argumentos_al_respaldo():
+    principal = EstrategiaQueFalla(TimeoutError())
+    respaldo = EstrategiaFija(300)
+
+    ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert principal.llamadas == [(POS, PARADERO)]
+    assert respaldo.llamadas == [(POS, PARADERO)]
+
+
+def test_la_principal_se_intenta_una_sola_vez_antes_del_respaldo():
+    # ConRespaldo no reintenta por su cuenta: los reintentos son
+    # responsabilidad de la estrategia principal.
+    principal = EstrategiaQueFalla(TimeoutError())
+    respaldo = EstrategiaFija(300)
+
+    ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert len(principal.llamadas) == 1
+    assert len(respaldo.llamadas) == 1
+
+
+# ---------- Errores que NO deben activar el respaldo ----------
+
+@pytest.mark.parametrize(
+    "excepcion",
+    [ValueError("dato inválido"), RuntimeError("fallo interno"), KeyError("x")],
+)
+def test_otras_excepciones_de_la_principal_se_propagan(excepcion):
+    principal = EstrategiaQueFalla(excepcion)
+    respaldo = EstrategiaFija(300)
+
+    with pytest.raises(type(excepcion)):
+        ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert respaldo.llamadas == []
+
+
+# ---------- Fallos del respaldo ----------
+
+def test_si_el_respaldo_tambien_da_timeout_la_excepcion_se_propaga():
+    principal = EstrategiaQueFalla(TimeoutError("principal"))
+    respaldo = EstrategiaQueFalla(TimeoutError("respaldo"))
+
+    with pytest.raises(TimeoutError, match="respaldo"):
+        ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+
+def test_si_el_respaldo_lanza_otra_excepcion_se_propaga():
+    principal = EstrategiaQueFalla(TimeoutError())
+    respaldo = EstrategiaQueFalla(ValueError("respaldo roto"))
+
+    with pytest.raises(ValueError, match="respaldo roto"):
+        ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+
+# ---------- Casos borde ----------
+
+def test_un_resultado_falsy_valido_no_activa_el_respaldo():
+    # 0 es un ETA válido (el bus está llegando); no debe confundirse con fallo.
+    principal = EstrategiaFija(0)
+    respaldo = EstrategiaFija(300)
+
+    resultado = ConRespaldo(principal, respaldo).estimar(POS, PARADERO)
+
+    assert resultado == 0
+    assert respaldo.llamadas == []
+
+
+def test_un_resultado_none_de_la_principal_se_devuelve_tal_cual():
+    principal = EstrategiaFija(None)
+    respaldo = EstrategiaFija(300)
+
+    assert ConRespaldo(principal, respaldo).estimar(POS, PARADERO) is None
+    assert respaldo.llamadas == []
+
+
+def test_es_reutilizable_entre_llamadas():
+    # Una llamada con fallo no debe dejar estado que afecte a la siguiente.
+    class Intermitente(EstrategiaEta):
+        def __init__(self):
+            self.n = 0
+
+        def estimar(self, pos, paradero):
+            self.n += 1
+            if self.n == 1:
+                raise TimeoutError()
+            return 100
+
+    estrategia = ConRespaldo(Intermitente(), EstrategiaFija(300))
+
+    assert estrategia.estimar(POS, PARADERO) == 300  # 1.ª: cae al respaldo
+    assert estrategia.estimar(POS, PARADERO) == 100  # 2.ª: la principal responde
+```
+
+Notas sobre las decisiones:
+
+- **Fakes en vez de `unittest.mock`**: permiten comprobar tanto el valor devuelto como cuántas veces y con qué argumentos se llamó a cada estrategia, sin configurar mocks.
+- **Prueba de otras excepciones**: el código solo captura `TimeoutError`, así que cualquier otra debe propagarse y el respaldo no debe invocarse. Esta prueba protege contra que alguien cambie el `except` a `Exception` sin darse cuenta.
+- **Prueba del resultado `0`**: sirve de protección ante una futura refactorización tipo `return principal.estimar(...) or respaldo.estimar(...)`, que trataría un ETA de 0 como fallo.
+- **Si `EstrategiaEta` es una clase abstracta** con otros métodos abstractos, añade esos métodos a los fakes, o hereda de una clase base de pruebas común.
+
+Ejecútalas con:
+
+```bash
+pytest -v
+```

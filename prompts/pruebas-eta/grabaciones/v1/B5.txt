@@ -1,0 +1,180 @@
+Aquí tienes un conjunto de pruebas con pytest. Uso un doble de prueba (`EstrategiaFalsa`) que ejecuta una lista de resultados programados: si el elemento es una excepción la lanza, y si no, lo devuelve. Así se controla exactamente qué pasa en cada intento y se puede contar cuántas veces se llamó a la estrategia interna.
+
+```python
+import pytest
+
+# Ajusta el import a la ubicación real de tus clases
+from eta import ConReintentosEta, EstrategiaEta
+
+
+class EstrategiaFalsa(EstrategiaEta):
+    """Doble de prueba: devuelve o lanza los resultados en el orden dado."""
+
+    def __init__(self, resultados):
+        self._resultados = list(resultados)
+        self.llamadas = []  # guarda (pos, paradero) de cada invocación
+
+    def estimar(self, pos, paradero):
+        self.llamadas.append((pos, paradero))
+        resultado = self._resultados[len(self.llamadas) - 1]
+        if isinstance(resultado, BaseException):
+            raise resultado
+        return resultado
+
+
+POS = (-16.4090, -71.5375)  # coordenadas de ejemplo (Arequipa)
+PARADERO = "P-001"
+
+
+def test_devuelve_resultado_si_el_primer_intento_funciona():
+    interna = EstrategiaFalsa([120])
+    estrategia = ConReintentosEta(interna)
+
+    assert estrategia.estimar(POS, PARADERO) == 120
+    assert len(interna.llamadas) == 1
+
+
+def test_reintenta_tras_timeout_y_devuelve_el_resultado_exitoso():
+    interna = EstrategiaFalsa([TimeoutError(), TimeoutError(), 95])
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    assert estrategia.estimar(POS, PARADERO) == 95
+    assert len(interna.llamadas) == 3
+
+
+def test_exito_en_el_ultimo_intento_no_lanza_error():
+    interna = EstrategiaFalsa([TimeoutError(), TimeoutError(), TimeoutError(), 60])
+    estrategia = ConReintentosEta(interna, intentos=4)
+
+    assert estrategia.estimar(POS, PARADERO) == 60
+    assert len(interna.llamadas) == 4
+
+
+def test_lanza_timeout_cuando_se_agotan_los_intentos():
+    interna = EstrategiaFalsa([TimeoutError()] * 3)
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    with pytest.raises(TimeoutError):
+        estrategia.estimar(POS, PARADERO)
+
+    assert len(interna.llamadas) == 3
+
+
+def test_relanza_la_ultima_excepcion_original():
+    ultima = TimeoutError("tercer intento")
+    interna = EstrategiaFalsa([TimeoutError("primero"), TimeoutError("segundo"), ultima])
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    with pytest.raises(TimeoutError) as info:
+        estrategia.estimar(POS, PARADERO)
+
+    assert info.value is ultima
+
+
+def test_usa_tres_intentos_por_defecto():
+    interna = EstrategiaFalsa([TimeoutError()] * 10)
+    estrategia = ConReintentosEta(interna)
+
+    with pytest.raises(TimeoutError):
+        estrategia.estimar(POS, PARADERO)
+
+    assert len(interna.llamadas) == 3
+
+
+def test_intentos_igual_a_uno_no_reintenta():
+    interna = EstrategiaFalsa([TimeoutError(), 50])
+    estrategia = ConReintentosEta(interna, intentos=1)
+
+    with pytest.raises(TimeoutError):
+        estrategia.estimar(POS, PARADERO)
+
+    assert len(interna.llamadas) == 1
+
+
+@pytest.mark.parametrize("intentos", [1, 2, 5, 10])
+def test_cantidad_de_llamadas_coincide_con_intentos_configurados(intentos):
+    interna = EstrategiaFalsa([TimeoutError()] * intentos)
+    estrategia = ConReintentosEta(interna, intentos=intentos)
+
+    with pytest.raises(TimeoutError):
+        estrategia.estimar(POS, PARADERO)
+
+    assert len(interna.llamadas) == intentos
+
+
+@pytest.mark.parametrize("excepcion", [ValueError("dato inválido"), RuntimeError("falla"), KeyError("x")])
+def test_otras_excepciones_se_propagan_sin_reintentar(excepcion):
+    interna = EstrategiaFalsa([excepcion, 100])
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    with pytest.raises(type(excepcion)):
+        estrategia.estimar(POS, PARADERO)
+
+    assert len(interna.llamadas) == 1
+
+
+def test_excepcion_distinta_tras_un_timeout_se_propaga_de_inmediato():
+    interna = EstrategiaFalsa([TimeoutError(), ValueError("boom"), 100])
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    with pytest.raises(ValueError, match="boom"):
+        estrategia.estimar(POS, PARADERO)
+
+    assert len(interna.llamadas) == 2
+
+
+def test_pasa_los_mismos_argumentos_en_cada_intento():
+    interna = EstrategiaFalsa([TimeoutError(), TimeoutError(), 80])
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    estrategia.estimar(POS, PARADERO)
+
+    assert interna.llamadas == [(POS, PARADERO)] * 3
+
+
+def test_puede_reutilizarse_despues_de_un_fallo():
+    # Cada llamada a estimar() debe empezar con el contador de intentos en cero
+    interna = EstrategiaFalsa([TimeoutError(), TimeoutError(), TimeoutError(), 70])
+    estrategia = ConReintentosEta(interna, intentos=3)
+
+    with pytest.raises(TimeoutError):
+        estrategia.estimar(POS, PARADERO)
+
+    assert estrategia.estimar(POS, PARADERO) == 70
+    assert len(interna.llamadas) == 4
+
+
+def test_con_cero_intentos_no_llama_a_la_interna_y_devuelve_none():
+    # Caso límite: el bucle no se ejecuta. Documenta el comportamiento actual.
+    interna = EstrategiaFalsa([])
+    estrategia = ConReintentosEta(interna, intentos=0)
+
+    assert estrategia.estimar(POS, PARADERO) is None
+    assert interna.llamadas == []
+```
+
+Qué cubren las pruebas:
+
+- **Camino feliz:** éxito en el primer intento, tras fallos previos y justo en el último intento.
+- **Agotamiento de intentos:** se lanza `TimeoutError`, se hacen exactamente `intentos` llamadas y se relanza la última excepción, no una nueva.
+- **Valor por defecto:** `intentos=3` cuando no se indica.
+- **Otras excepciones:** solo `TimeoutError` se reintenta; `ValueError`, `RuntimeError`, etc. se propagan de inmediato.
+- **Argumentos:** `pos` y `paradero` llegan idénticos en cada reintento.
+- **Reutilización:** el estado de los intentos no se arrastra entre llamadas.
+
+Observación sobre el código: con `intentos=0` (o negativo) el bucle no se ejecuta y `estimar` devuelve `None` en silencio, lo que probablemente no es lo que quieres. La última prueba documenta ese comportamiento. Si prefieres validarlo, puedes agregar en `__init__`:
+
+```python
+if intentos < 1:
+    raise ValueError("intentos debe ser >= 1")
+```
+
+y reemplazar esa prueba por:
+
+```python
+def test_intentos_menor_a_uno_es_invalido():
+    with pytest.raises(ValueError):
+        ConReintentosEta(EstrategiaFalsa([]), intentos=0)
+```
+
+Si `EstrategiaEta` es una clase abstracta con más métodos abstractos, añade esos métodos a `EstrategiaFalsa` para que se pueda instanciar. Ejecútalas con `pytest -v`.

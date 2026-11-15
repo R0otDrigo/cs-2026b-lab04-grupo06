@@ -1,0 +1,45 @@
+# Evaluación de la Tarea B: pruebas pytest para la función de tiempo de llegada (ETA).
+# Ejecutar desde la carpeta prompts/:
+#   npx promptfoo eval -c pruebas-eta/promptfooconfig.yaml --no-cache -o pruebas-eta/resultados.json
+description: "Tarea B - pruebas pytest para el ETA (RutaSIT)"
+prompts:
+  - id: file://v1.txt
+    label: v1
+  - id: file://v2.txt
+    label: v2
+  - id: file://v3.txt
+    label: v3
+  - id: file://v3.1.txt
+    label: v3.1
+  - id: file://v3.2.txt
+    label: v3.2
+providers:
+  - id: file://../proveedor_grabado.py
+    label: asistente-grabado
+    config:
+      carpeta: pruebas-eta
+defaultTest:
+  assert:
+    - type: is-json                     # B-A1: contrato de salida
+      value: file://esquema.json
+      metric: B1_contrato_json
+    - type: python                      # B-A2: el codigo compila
+      value: file://asserts/compila.py
+      metric: B2_compila
+    - type: python                      # B-A3 (clave de la guia): 3 o mas assert
+      value: file://asserts/tres_asserts.py
+      metric: B3_tres_asserts
+    - type: python                      # B-A4: las pruebas PASAN contra el codigo real de src/rutasit
+      value: file://asserts/ejecuta.py
+      metric: B4_ejecuta_y_pasa
+    - type: python                      # B-A5: sin red, claves ni esperas
+      value: file://asserts/sin_red.py
+      metric: B5_sin_red
+    - type: python                      # B7: las pruebas mencionan la clase y el comportamiento pedidos
+      value: file://asserts/objetivo.py
+      metric: B7_prueba_el_objetivo
+    - type: python                      # B8: si se rompe el comportamiento, las pruebas fallan (mutacion)
+      value: file://asserts/mutaciones.py
+      metric: B8_detecta_mutacion
+tests:
+  - file://casos.yaml

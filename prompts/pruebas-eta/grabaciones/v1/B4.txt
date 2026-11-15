@@ -1,0 +1,164 @@
+Asumo que `EtaPorMapas`, `EstrategiaEta` y `ProveedorMapas` están en un módulo `eta` (ajusta el import a tu estructura). Uso un proveedor falso en lugar de un mock para que las pruebas sean legibles.
+
+```python
+# test_eta_por_mapas.py
+from types import SimpleNamespace
+
+import pytest
+
+from eta import EstrategiaEta, EtaPorMapas, ProveedorMapas  # ajusta el import
+
+
+class MapasFalso(ProveedorMapas):
+    """Proveedor de mapas de prueba: devuelve segundos fijos y registra las llamadas."""
+
+    def __init__(self, segundos=0, error=None):
+        self.segundos = segundos
+        self.error = error
+        self.llamadas = []
+
+    def tiempo_de_recorrido(self, origen, destino) -> int:
+        self.llamadas.append((origen, destino))
+        if self.error:
+            raise self.error
+        return self.segundos
+
+
+@pytest.fixture
+def pos():
+    return SimpleNamespace(lat=-16.409, lon=-71.537)
+
+
+@pytest.fixture
+def paradero():
+    return (-16.398, -71.536)
+
+
+def estimar(segundos, pos, paradero):
+    return EtaPorMapas(MapasFalso(segundos)).estimar(pos, paradero)
+
+
+# --- Contrato general ---
+
+def test_es_una_estrategia_eta():
+    assert isinstance(EtaPorMapas(MapasFalso()), EstrategiaEta)
+
+
+def test_devuelve_entero(pos, paradero):
+    assert isinstance(estimar(300, pos, paradero), int)
+
+
+# --- Conversión de segundos a minutos ---
+
+@pytest.mark.parametrize(
+    "segundos, minutos",
+    [
+        (0, 0),
+        (60, 1),
+        (120, 2),
+        (600, 10),
+        (3600, 60),
+    ],
+)
+def test_convierte_segundos_exactos_a_minutos(segundos, minutos, pos, paradero):
+    assert estimar(segundos, pos, paradero) == minutos
+
+
+# --- Redondeo ---
+
+@pytest.mark.parametrize(
+    "segundos, minutos",
+    [
+        (29, 0),   # menos de medio minuto baja a 0
+        (31, 1),   # más de medio minuto sube
+        (89, 1),   # 1.48 -> 1
+        (91, 2),   # 1.52 -> 2
+        (329, 5),  # 5.48 -> 5
+        (331, 6),  # 5.52 -> 6
+    ],
+)
+def test_redondea_al_minuto_mas_cercano(segundos, minutos, pos, paradero):
+    assert estimar(segundos, pos, paradero) == minutos
+
+
+@pytest.mark.parametrize(
+    "segundos, minutos",
+    [
+        (30, 0),   # 0.5 -> 0
+        (90, 2),   # 1.5 -> 2
+        (150, 2),  # 2.5 -> 2
+        (210, 4),  # 3.5 -> 4
+    ],
+)
+def test_en_mitades_exactas_redondea_al_par_mas_cercano(segundos, minutos, pos, paradero):
+    # round() de Python usa "redondeo bancario". Si el negocio espera
+    # redondear siempre hacia arriba, esta prueba documenta que hoy NO ocurre.
+    assert estimar(segundos, pos, paradero) == minutos
+
+
+# --- Interacción con el proveedor de mapas ---
+
+def test_pasa_origen_como_tupla_lat_lon(pos, paradero):
+    mapas = MapasFalso(300)
+    EtaPorMapas(mapas).estimar(pos, paradero)
+
+    origen, _ = mapas.llamadas[0]
+    assert origen == (pos.lat, pos.lon)
+
+
+def test_pasa_el_paradero_sin_modificar(pos, paradero):
+    mapas = MapasFalso(300)
+    EtaPorMapas(mapas).estimar(pos, paradero)
+
+    _, destino = mapas.llamadas[0]
+    assert destino is paradero
+
+
+def test_consulta_al_proveedor_una_sola_vez(pos, paradero):
+    mapas = MapasFalso(300)
+    EtaPorMapas(mapas).estimar(pos, paradero)
+
+    assert len(mapas.llamadas) == 1
+
+
+def test_cada_estimacion_consulta_de_nuevo_al_proveedor(pos, paradero):
+    mapas = MapasFalso(300)
+    eta = EtaPorMapas(mapas)
+
+    eta.estimar(pos, paradero)
+    eta.estimar(pos, paradero)
+
+    assert len(mapas.llamadas) == 2
+
+
+def test_usa_el_proveedor_inyectado(pos, paradero):
+    rapido = EtaPorMapas(MapasFalso(60))
+    lento = EtaPorMapas(MapasFalso(1200))
+
+    assert rapido.estimar(pos, paradero) == 1
+    assert lento.estimar(pos, paradero) == 20
+
+
+# --- Errores ---
+
+def test_propaga_errores_del_proveedor(pos, paradero):
+    eta = EtaPorMapas(MapasFalso(error=TimeoutError("sin respuesta")))
+
+    with pytest.raises(TimeoutError):
+        eta.estimar(pos, paradero)
+
+
+def test_posicion_sin_lat_lon_lanza_attribute_error(paradero):
+    eta = EtaPorMapas(MapasFalso(300))
+
+    with pytest.raises(AttributeError):
+        eta.estimar(SimpleNamespace(), paradero)
+```
+
+Notas:
+
+- **Redondeo bancario:** `round(2.5)` da `2` y `round(1.5)` da `2` en Python 3. Por eso hay una prueba aparte para las mitades exactas. Si quieres que 150 s sea 3 min, cambia la implementación a `math.ceil` o `int(x + 0.5)` y ajusta esa prueba.
+- **Segundos negativos:** la función no los valida (`-90` daría `-2`). No agregué prueba porque el comportamiento no está definido. Si quieres que se rechacen, habría que validarlo en el código y probarlo.
+- **Pruebas de `MapasFalso`:** al heredar de `ProveedorMapas`, si esa clase cambia su firma abstracta, las pruebas fallarán al instanciarlo, lo cual es deseable.
+
+Ejecuta con `pytest -v test_eta_por_mapas.py`.
