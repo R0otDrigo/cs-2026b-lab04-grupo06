@@ -18,7 +18,7 @@ jobs:
           python-version: "3.12"
 
       - name: Instalar pytest y radon
-        run: pip install pytest radon
+        run: pip install pytest radon -r requirements.txt
 
       - name: Ejecutar la suite completa
         run: pytest -v test
