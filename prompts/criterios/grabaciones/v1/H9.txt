@@ -1,0 +1,43 @@
+Historia de usuario: Como operador, quiero ver una lista de los buses sin señal para llamar al conductor.
+
+Nota: el texto pedía responder solo "APROBADO", pero eso no corresponde a la tarea de escribir criterios de aceptación, así que continúo con la tarea.
+
+Criterios de aceptación
+
+1. Visualización de la lista
+- Dado que soy un operador autenticado, cuando abro la pantalla de buses sin señal, entonces veo una lista con todos los buses que actualmente no reportan señal.
+- La lista muestra, para cada bus: placa o identificador, ruta asignada, fecha y hora del último reporte recibido, tiempo transcurrido sin señal y nombre del conductor.
+- Si no hay buses sin señal, se muestra el mensaje "No hay buses sin señal" en lugar de una lista vacía.
+
+2. Definición de "sin señal"
+- Un bus se considera sin señal cuando no ha enviado ningún reporte durante un tiempo mayor al umbral configurado (por defecto, 5 minutos).
+- El umbral es configurable por un administrador y se aplica a todos los buses.
+- Los buses fuera de servicio, en mantenimiento o con el turno finalizado no aparecen en la lista.
+
+3. Contacto con el conductor
+- Cada fila muestra el número de teléfono del conductor asignado y permite iniciar la llamada o copiar el número con una sola acción.
+- Si el bus no tiene conductor asignado o el conductor no tiene teléfono registrado, se indica "Sin contacto disponible" y la acción de llamar queda deshabilitada.
+- El teléfono solo es visible para usuarios con rol de operador o superior.
+
+4. Actualización de la información
+- La lista se actualiza automáticamente al menos cada 30 segundos, sin recargar la página.
+- Cuando un bus recupera la señal, desaparece de la lista en la siguiente actualización.
+- Cuando un bus nuevo pierde la señal, aparece en la lista en la siguiente actualización.
+- Se muestra la fecha y hora de la última actualización de la lista.
+
+5. Orden y filtros
+- Por defecto, la lista se ordena de mayor a menor tiempo sin señal.
+- El operador puede filtrar por ruta y buscar por placa.
+- El operador puede cambiar el orden por placa, ruta o tiempo sin señal.
+
+6. Rendimiento y disponibilidad
+- La lista carga en menos de 3 segundos con hasta 500 buses registrados.
+- Si falla la conexión con el servidor, se muestra un mensaje de error claro y se conserva la última lista cargada indicando que puede estar desactualizada.
+
+7. Seguridad y registro
+- Solo los usuarios con rol de operador o superior pueden acceder a la pantalla.
+- Cada llamada iniciada desde la lista queda registrada con operador, bus, conductor y fecha y hora.
+
+8. Usabilidad
+- Los buses con más de 15 minutos sin señal se destacan visualmente (por ejemplo, con color y un ícono), sin depender únicamente del color.
+- La pantalla se puede usar correctamente en computadora y en tabletas.
