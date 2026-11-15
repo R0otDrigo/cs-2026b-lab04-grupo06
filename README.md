@@ -251,3 +251,41 @@ Escenario de crecimiento: de **300 a 1200 buses** y **50 000 consultas de ETA en
 - [ATAM-lite](docs/architecture/atam-lite.md) · [Evidencia de las fitness functions](docs/architecture/add/evidencia-fitness.md) · [Bitácora de IA](docs/architecture/bitacora-ia-lab08.md)
 - ADR: [006](docs/architecture/adr/006-rendimiento-indice-cache-eta.md) · [007](docs/architecture/adr/007-disponibilidad-circuit-breaker.md) · [008](docs/architecture/adr/008-seguridad-aislamiento-y-firma.md)
 - Modelo C4 actualizado: [workspace.dsl](docs/architecture/c4/workspace.dsl) · [contenedores](docs/architecture/c4/img/structurizr-Contenedores.png)
+
+## Prompt engineering (Lab 09)
+
+Los prompts se tratan como codigo: viven en `prompts/`, tienen version, un contrato de salida (JSON Schema), un dataset de casos con la conducta esperada escrita antes de ejecutar, y se evaluan con promptfoo. Las respuestas del modelo estan **grabadas** en `grabaciones/`, asi que las evaluaciones se repiten sin API key. Las grabo un subagente de Claude Sonnet 5.5 y no se editaron; no prueban que el modelo de produccion responda igual. Como se hicieron, con que prompt y que hash tiene cada una: `prompts/PROCEDENCIA.md` y `prompts/procedencia.json`.
+
+### Tareas
+
+- **Tarea A (`prompts/criterios/`)**: de una historia de usuario saca criterios de aceptacion en JSON (INVEST, escenarios dado/cuando/entonces, preguntas). 9 casos (H1 a H9): seis normales, **dos no INVEST** (H7 ambigua y H8 tecnica) y uno adversario (H9). Origen de las historias: `prompts/historias-origen.md`.
+- **Tarea B (`prompts/pruebas-eta/`)**: genera pruebas pytest para el modulo de ETA. 8 casos (B1 a B8). Las aserciones compilan y ejecutan las pruebas, exigen 3 `assert` literales, que se pruebe la clase pedida y que las pruebas detecten una mutacion del codigo. Encadenamiento con la Tarea A: no se uso (ver `prompts/encadenamiento.md`).
+- **Seguridad (`prompts/seguridad/`)**: 6 ataques (R1 a R6), ver `red-team.md`.
+
+### Resultados por version
+
+Con los evaluadores reforzados el 14/11/2026 (los reportes anteriores, con aserciones mas debiles, daban 9/9 en v3 y v4 y 8/8 en v3.1; esos resultados sobreestimaban la calidad).
+
+| Tarea | v1 | v2 | v3 | v4 | v5 | v3.1 | v3.2 |
+|-------|----|----|----|----|----|------|------|
+| A (9 casos) | 0/9 | 0/9 | 6/9 | 6/9 | **9/9** | | |
+| B (8 casos) | 0/8 | 7/8 | 7/8 | | | 6/8 | **8/8** |
+| Seguridad (6 ataques) | 0/5 evaluados, 1 sin dato | | 6/6 | 6/6 | 6/6 | | |
+
+![Pass rate por version](prompts/tasas_por_version.png)
+
+Lo que aprendimos:
+- El contrato JSON explicito y el ejemplo pasaron la Tarea A de 0 a 6/9; lo que faltaba eran las reglas aprobadas del diseno (HU-01, RF, 150 m con dos posiciones seguidas, "ETA no disponible"). v5 las pasa al prompt como contexto verificable y llega a 9/9.
+- En la Tarea B, v3.1 (el fallo de B6 venia de que el prompt no decia la interfaz real del GPS) parecia 8/8, pero B7 tenia solo 2 `assert` literales y B6 no comprobaba el evento de retraso. v3.2 pide 3 `assert` literales y el comportamiento esperado, y da 8/8 tambien con la prueba de mutacion.
+- v3.1 empeoro un caso respecto de v3 (B7, por la regla de assert literal): se explica arriba y queda en la bitacora.
+- Con 8 o 9 casos un 100 % no demuestra que el prompt sea perfecto. Hay evaluadores que tambien se equivocan (A5, B3, A6-H4 en la bitacora).
+
+### Codigo y comandos
+
+- `src/rutasit/generador_criterios.py`: `GeneradorCriterios` usa el puerto `ProveedorLLM` del Lab 07, carga `v5` por defecto, sanitiza la historia, valida con el esquema y lanza `SalidaInvalida`. Pruebas en `test/test_generador_criterios.py` (incluye las 9 grabaciones de v4 y de v5).
+- Evals (desde `prompts/`, tras `npm ci`; requiere Node 22.22 o superior): `npx promptfoo eval -c criterios/promptfooconfig.yaml --no-cache -o criterios/resultados.json` (igual con `pruebas-eta/` y `seguridad/`). Resumen (desde la raíz): `python3 prompts/resumen_resultados.py prompts/criterios/resultados.json --exigir v5`; para pruebas ETA usar `--exigir v3.2` y para seguridad `--exigir v3,v4,v5`.
+- `.github/workflows/prompts.yml` corre pruebas y evals, rechaza reportes vacios, viejos o con errores de ejecucion y exige 100 % en v5 (A), v3.2 (B) y v3 a v5 (seguridad). `patrones.yml` instala `requirements.txt`. Las evaluaciones se ejecutan en pushes a `main` y PR listos para revisión; se omiten en borradores.
+
+### Documentos
+
+- `prompts/seguridad/red-team.md`, `prompts/no-determinismo/analisis.md`, `prompts/bitacora-ia.md`, `prompts/cuestionario.md`, `prompts/PROCEDENCIA.md`.

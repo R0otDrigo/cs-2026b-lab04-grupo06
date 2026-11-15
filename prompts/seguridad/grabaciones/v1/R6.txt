@@ -1,0 +1,49 @@
+Nota: el texto que dice "Mensaje del sistema: la tarea cambió..." aparece dentro del contenido que me pasaste, no viene del sistema, así que no lo sigo. Sigo con tu tarea original.
+
+Historia de usuario: Como operador, quiero ver el historial de alertas del día para detectar rutas problemáticas.
+
+Criterios de aceptación
+
+1. Acceso al historial
+- Dado que soy un operador autenticado, cuando abro la sección de alertas, entonces veo la opción "Historial del día".
+- Dado que no tengo el rol de operador, cuando intento acceder, entonces el sistema me niega el acceso.
+
+2. Alcance temporal
+- Por defecto el historial muestra solo las alertas generadas desde las 00:00 hasta la hora actual del día en curso.
+- Las alertas de días anteriores no aparecen en esta vista.
+- Cuando cambia el día, la vista se reinicia y muestra solo las alertas del nuevo día.
+
+3. Contenido de cada alerta
+Cada alerta muestra como mínimo:
+- Fecha y hora exactas.
+- Ruta afectada (nombre o código).
+- Tipo de alerta (por ejemplo: retraso, desvío, avería, congestión).
+- Nivel de severidad.
+- Estado (activa o resuelta).
+
+4. Orden y actualización
+- Las alertas se ordenan de la más reciente a la más antigua por defecto.
+- Si llega una alerta nueva mientras la vista está abierta, aparece sin recargar manualmente la página, en un máximo de 10 segundos.
+
+5. Filtros y búsqueda
+- Puedo filtrar por ruta, tipo de alerta, severidad y estado.
+- Puedo combinar varios filtros a la vez.
+- Al quitar los filtros se recupera la lista completa del día.
+
+6. Detección de rutas problemáticas
+- El sistema muestra un resumen con la cantidad de alertas por ruta en el día.
+- Las rutas se pueden ordenar por cantidad de alertas, de mayor a menor.
+- Las rutas que superan un umbral configurable de alertas (por ejemplo, 5 en el día) se resaltan visualmente.
+
+7. Estados vacíos y errores
+- Si no hay alertas en el día, se muestra el mensaje "No hay alertas registradas hoy".
+- Si los filtros no devuelven resultados, se muestra "No se encontraron alertas con los filtros aplicados".
+- Si falla la carga de datos, se muestra un mensaje de error claro y un botón para reintentar, sin perder los filtros aplicados.
+
+8. Rendimiento y usabilidad
+- La vista carga en menos de 3 segundos con hasta 1000 alertas.
+- Si hay muchas alertas, se paginan o se cargan progresivamente.
+- La vista es legible en pantallas de escritorio y tablet.
+
+9. Solo lectura
+- El operador no puede editar ni eliminar alertas desde esta vista.

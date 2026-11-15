@@ -1,0 +1,49 @@
+User story: As a passenger, I want to save my favorite stops.
+
+Acceptance criteria
+
+Scenario 1: Saving a stop as a favorite
+Given a passenger is viewing the details of a stop and that stop is not yet in their favorites, when the passenger taps the favorite (star) control, then the stop is added to their favorites list, the control changes to a filled state, and a short confirmation message such as "Stop saved to favorites" is shown.
+
+Scenario 2: Removing a stop from favorites
+Given a stop is already in the passenger's favorites, when the passenger taps the filled favorite control and confirms the action if asked, then the stop is removed from the favorites list, the control returns to its empty state, and the stop no longer appears in the favorites list.
+
+Scenario 3: Viewing the favorites list
+Given the passenger has saved one or more stops, when they open the Favorites section, then they see every saved stop with its name, its code or identifier, and the routes that serve it, ordered by the date they were saved with the most recent first. Selecting a stop opens its detail view.
+
+Scenario 4: Empty favorites list
+Given the passenger has not saved any stops, when they open the Favorites section, then they see a friendly empty-state message explaining how to add a favorite, and no error is displayed.
+
+Scenario 5: Preventing duplicates
+Given a stop is already saved, when the passenger tries to save it again from any screen (map, search results, or route view), then no duplicate entry is created and the stop continues to appear only once in the list.
+
+Scenario 6: Persistence across sessions
+Given the passenger has saved favorites, when they close and reopen the application, then all previously saved favorites are still present and in the same order.
+
+Scenario 7: Favorite status is consistent everywhere
+Given a stop is marked as a favorite, when the passenger sees that stop on the map, in search results, or in a route's stop list, then it is shown with the same filled favorite indicator in every place, and changing it in one place updates all the others.
+
+Scenario 8: Reaching the saved-stop limit
+Given the passenger has reached the maximum number of favorites allowed (for example, 50), when they try to save another stop, then the new stop is not saved, and a clear message tells them the limit has been reached and that they can remove an existing favorite to make room.
+
+Scenario 9: Saving without connectivity
+Given the device has no network connection, when the passenger saves or removes a favorite, then the change is stored locally and immediately reflected in the interface, and it is synchronized automatically once the connection is restored. If synchronization fails, the passenger is told and the change is retried, without losing the saved data.
+
+Scenario 10: Stop no longer available
+Given a favorite stop is later closed or removed from the transport network, when the passenger opens the Favorites section, then that stop is still listed but clearly marked as unavailable, and the passenger can remove it from the list.
+
+Scenario 11: Accessibility
+Given a passenger uses a screen reader or other assistive technology, when they interact with the favorite control, then it has a descriptive label such as "Add Stop X to favorites" or "Remove Stop X from favorites", its current state is announced, and it can be operated without relying on color alone.
+
+Scenario 12: Privacy and account scope
+Given the passenger is signed in, when they save favorites, then those favorites are stored only in their own account and are not visible to other users. If the passenger is not signed in, the favorites are stored on the device only, and the passenger is told that they will not be available on other devices.
+
+Non-functional criteria
+- Saving or removing a favorite should be reflected in the interface in under one second under normal network conditions.
+- The favorites list should load in under two seconds for up to 50 saved stops.
+- Favorite data must be transmitted and stored securely and must contain only the information needed, namely the user identifier, the stop identifier, and the date saved.
+
+Definition of done
+- All scenarios above pass in manual and automated tests.
+- The feature works on the supported devices and screen sizes.
+- The behavior has been reviewed against the accessibility guidelines.

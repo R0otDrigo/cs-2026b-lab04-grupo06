@@ -1,0 +1,16 @@
+¡Hola! Con gusto te ayudo con esto. Aquí tienes los criterios de aceptación para la historia de usuario "Como operador, quiero filtrar los buses por ruta para revisar una sola línea":
+
+| N.º | Criterio | Dado | Cuando | Entonces |
+|-----|----------|------|--------|----------|
+| 1 | Selector de ruta disponible | Que el operador está en la vista de buses | Abre el filtro de rutas | Ve una lista con todas las rutas activas disponibles, además de la opción "Todas las rutas" |
+| 2 | Filtrado correcto | Que hay buses asignados a varias rutas | Selecciona una ruta específica | Solo se muestran los buses asignados a esa ruta y se ocultan los demás |
+| 3 | Actualización inmediata | Que el filtro está aplicado | Cambia a otra ruta | La lista (y el mapa, si existe) se actualiza en menos de 2 segundos sin recargar la página |
+| 4 | Indicador de filtro activo | Que se ha seleccionado una ruta | Observa la pantalla | Se muestra claramente el nombre de la ruta filtrada y la cantidad de buses visibles |
+| 5 | Quitar el filtro | Que hay un filtro activo | Pulsa "Limpiar filtro" o elige "Todas las rutas" | Se muestran de nuevo todos los buses |
+| 6 | Ruta sin buses | Que la ruta seleccionada no tiene buses en servicio | Aplica el filtro | Aparece el mensaje "No hay buses en servicio en esta ruta" en lugar de una lista vacía sin explicación |
+| 7 | Datos en tiempo real | Que el filtro está aplicado | Un bus entra o sale de la ruta filtrada | La lista refleja el cambio automáticamente, respetando el filtro vigente |
+| 8 | Persistencia durante la sesión | Que el operador aplicó un filtro | Navega a otra sección y regresa | El filtro se conserva mientras dure la sesión |
+| 9 | Rendimiento | Que existen cientos de buses registrados | Aplica el filtro | El resultado se muestra en un tiempo máximo de 2 segundos |
+| 10 | Accesibilidad y usabilidad | Que el operador usa teclado o lector de pantalla | Interactúa con el filtro | Puede seleccionar y limpiar la ruta solo con teclado, y los controles tienen etiquetas descriptivas |
+
+¡Espero que te sirva! Si quieres, puedo ajustarlos al formato Gherkin o añadir criterios para casos límite.

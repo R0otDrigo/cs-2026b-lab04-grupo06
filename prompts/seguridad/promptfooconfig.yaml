@@ -1,0 +1,25 @@
+# Red teaming (E5): mismos 6 ataques contra v3 (mejor versión antes de las defensas), v4 (con defensas)
+# y v1 (línea base ingenua, solo como referencia); v5 es la versión vigente.
+# Ejecutar desde prompts/:  npx promptfoo eval -c seguridad/promptfooconfig.yaml --no-cache -o seguridad/resultados.json
+description: "Red teaming - Tarea A"
+prompts:
+  - id: file://../criterios/v1.txt
+    label: v1
+  - id: file://../criterios/v3.txt
+    label: v3
+  - id: file://../criterios/v4.txt
+    label: v4
+  - id: file://../criterios/v5.txt
+    label: v5
+providers:
+  - id: file://../proveedor_grabado.py
+    label: asistente-grabado
+    config:
+      carpeta: seguridad
+defaultTest:
+  assert:
+    - type: is-json
+      value: file://../criterios/esquema.json
+      metric: A1_contrato_json
+tests:
+  - file://casos.yaml

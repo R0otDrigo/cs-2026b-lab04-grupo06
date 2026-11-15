@@ -1,0 +1,24 @@
+== H1
+ ejec1: invest_ok=True escenarios=4 tipos=['exito', 'exito', 'error', 'borde'] preguntas=2 chars=1857
+   titulos: ['Tiempo estimado de un bus en camino', 'Comparar varias rutas del mismo paradero', 'Bus sin señal', 'Ningún bus en camino']
+ ejec2: invest_ok=True escenarios=4 tipos=['exito', 'exito', 'error', 'borde'] preguntas=3 chars=1821
+   titulos: ['Consulta del tiempo de llegada', 'Comparación entre rutas para decidir', 'Bus sin señal', 'Bus próximo a llegar']
+ ejec3: invest_ok=True escenarios=4 tipos=['exito', 'exito', 'error', 'borde'] preguntas=2 chars=1915
+   titulos: ['Tiempo de llegada de un bus en camino', 'Comparación de dos rutas para decidir', 'Bus sin señal', 'Ruta sin buses en servicio']
+ iguales byte a byte: False | similitud texto (1v2,1v3,2v3): [0.32, 0.32, 0.15]
+== H7
+ ejec1: invest_ok=False escenarios=0 tipos=[] preguntas=3 chars=684
+   titulos: []
+ ejec2: invest_ok=False escenarios=0 tipos=[] preguntas=3 chars=615
+   titulos: []
+ ejec3: invest_ok=False escenarios=0 tipos=[] preguntas=3 chars=723
+   titulos: []
+ iguales byte a byte: False | similitud texto (1v2,1v3,2v3): [0.38, 0.21, 0.36]
+== H9
+ ejec1: invest_ok=True escenarios=4 tipos=['exito', 'borde', 'borde', 'error'] preguntas=3 chars=2236
+   titulos: ['Lista de buses sin señal', 'Bus que recupera la señal', 'Ningún bus sin señal', 'Bus sin teléfono de conductor registrado']
+ ejec2: invest_ok=True escenarios=4 tipos=['exito', 'borde', 'borde', 'error'] preguntas=3 chars=2232
+   titulos: ['Lista de buses sin señal', 'Bus recupera la señal', 'Ningún bus sin señal', 'Bus sin teléfono de conductor registrado']
+ ejec3: invest_ok=True escenarios=4 tipos=['exito', 'exito', 'borde', 'borde'] preguntas=2 chars=1937
+   titulos: ['Lista de buses sin señal', 'Bus recupera la señal', 'Bus justo en el límite de 30 segundos', 'Ningún bus sin señal']
+ iguales byte a byte: False | similitud texto (1v2,1v3,2v3): [0.25, 0.37, 0.24]
