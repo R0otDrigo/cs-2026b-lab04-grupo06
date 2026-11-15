@@ -1,0 +1,127 @@
+Aquí tienes un archivo de pruebas con pytest para `EtaPorVelocidad.estimar`. Asumí que la clase vive en `rutasit.eta`; ajusta el import según tu estructura.
+
+```python
+# test_eta_por_velocidad.py
+import pytest
+
+from rutasit.gps import Posicion
+from rutasit.eta import EtaPorVelocidad  # ajusta el módulo si es otro
+
+
+@pytest.fixture
+def estrategia():
+    return EtaPorVelocidad()
+
+
+def pos(vel_kmh):
+    return Posicion(-16.4090, -71.5375, vel_kmh)
+
+
+PARADERO = object()  # la función no usa el paradero, basta un objeto cualquiera
+
+
+# --- Caso normal: ETA = 60 / velocidad, redondeado ---------------------------
+
+@pytest.mark.parametrize(
+    "vel, esperado",
+    [
+        (60, 1),    # 60/60 = 1.0
+        (30, 2),    # 60/30 = 2.0
+        (20, 3),    # 60/20 = 3.0
+        (15, 4),    # 60/15 = 4.0
+        (10, 6),    # 60/10 = 6.0
+        (12, 5),    # 60/12 = 5.0
+        (7, 9),     # 8.57 -> 9 (redondeo hacia arriba)
+        (25, 2),    # 2.4  -> 2 (redondeo hacia abajo)
+        (45, 1),    # 1.33 -> 1
+    ],
+)
+def test_eta_velocidad_normal(estrategia, vel, esperado):
+    assert estrategia.estimar(pos(vel), PARADERO) == esperado
+
+
+# --- Velocidad mínima (piso de 5 km/h) ---------------------------------------
+
+def test_velocidad_igual_al_piso(estrategia):
+    assert estrategia.estimar(pos(5.0), PARADERO) == 12
+
+
+@pytest.mark.parametrize("vel", [0, 0.0, 1, 2.5, 4.99])
+def test_velocidad_bajo_el_piso_se_trata_como_5(estrategia, vel):
+    # Con vel < 5 se usa 5 km/h, así que el ETA máximo es 12 minutos
+    assert estrategia.estimar(pos(vel), PARADERO) == 12
+
+
+def test_velocidad_negativa_se_trata_como_5(estrategia):
+    # Un valor negativo (lectura GPS corrupta) no debe producir ETA negativo
+    assert estrategia.estimar(pos(-10), PARADERO) == 12
+
+
+def test_no_hay_division_por_cero(estrategia):
+    # vel_kmh == 0 es el caso típico (bus detenido); no debe lanzar excepción
+    estrategia.estimar(pos(0), PARADERO)
+
+
+# --- Velocidades altas --------------------------------------------------------
+
+def test_velocidad_alta(estrategia):
+    assert estrategia.estimar(pos(120), PARADERO) == 0  # 0.5 -> 0 (ver nota)
+
+
+def test_velocidad_muy_alta_da_cero(estrategia):
+    assert estrategia.estimar(pos(300), PARADERO) == 0
+
+
+# --- Redondeo (round de Python usa "banker's rounding") ----------------------
+
+@pytest.mark.parametrize(
+    "vel, esperado",
+    [
+        (40, 2),    # 1.5 -> 2 (al par más cercano)
+        (24, 2),    # 2.5 -> 2 (al par más cercano)
+        (120, 0),   # 0.5 -> 0 (al par más cercano)
+    ],
+)
+def test_redondeo_en_mitades(estrategia, vel, esperado):
+    assert estrategia.estimar(pos(vel), PARADERO) == esperado
+
+
+# --- Propiedades generales ----------------------------------------------------
+
+@pytest.mark.parametrize("vel", [0, 3, 5, 17.3, 42, 80, 150])
+def test_retorna_entero(estrategia, vel):
+    resultado = estrategia.estimar(pos(vel), PARADERO)
+    assert isinstance(resultado, int)
+
+
+@pytest.mark.parametrize("vel", [-50, 0, 5, 20, 60, 200])
+def test_eta_nunca_es_negativo_ni_mayor_a_12(estrategia, vel):
+    assert 0 <= estrategia.estimar(pos(vel), PARADERO) <= 12
+
+
+def test_eta_no_aumenta_al_subir_la_velocidad(estrategia):
+    velocidades = [0, 5, 10, 20, 30, 60, 90, 120]
+    etas = [estrategia.estimar(pos(v), PARADERO) for v in velocidades]
+    assert etas == sorted(etas, reverse=True)
+
+
+def test_ignora_el_paradero(estrategia):
+    # La estrategia solo depende de la velocidad, no del paradero
+    p = pos(30)
+    assert estrategia.estimar(p, "A") == estrategia.estimar(p, "B") == estrategia.estimar(p, None)
+
+
+def test_ignora_lat_lon(estrategia):
+    a = Posicion(-16.40, -71.50, 30)
+    b = Posicion(10.0, 20.0, 30)
+    assert estrategia.estimar(a, PARADERO) == estrategia.estimar(b, PARADERO)
+```
+
+Ejecútalo con `pytest -v test_eta_por_velocidad.py`.
+
+Observaciones sobre la función:
+
+- **Redondeo "al par más cercano".** `round()` en Python 3 redondea las mitades al entero par, así que `round(2.5) == 2` y `round(0.5) == 0`. Si esperabas que 2.5 diera 3, tendrías que usar `math.ceil` o `int(x + 0.5)`. Las pruebas de redondeo documentan el comportamiento actual.
+- **ETA de 0 minutos.** A velocidades de 120 km/h o más el resultado es 0, aunque el bus esté lejos del paradero. Esto pasa porque la función ignora la distancia al paradero, y es una limitación del diseño más que un error en estas pruebas.
+- **Parámetro `paradero` sin uso.** Las pruebas `test_ignora_el_paradero` y `test_ignora_lat_lon` fijan ese comportamiento. Si más adelante la estrategia incorpora la distancia (lo normal para un ETA real), esas dos pruebas fallarán y habrá que actualizarlas.
+- **Constructor de `Posicion`.** Asumí que acepta `(lat, lon, vel_kmh)` de forma posicional, como indica tu comentario.

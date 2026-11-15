@@ -1,3 +1,5 @@
 pytest
 radon
 pylint
+jsonschema
+pyyaml

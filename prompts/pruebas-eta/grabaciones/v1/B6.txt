@@ -1,0 +1,221 @@
+Aquí tienes un archivo de pruebas para `consultar_eta`. Reemplazo las fábricas y el publicador por `MagicMock`, así cada prueba controla qué devuelve el GPS y qué estimación calcula la estrategia, y puedo verificar exactamente qué se publica.
+
+```python
+# test_consultar_eta.py
+from unittest.mock import MagicMock
+
+import pytest
+
+from rutasit.servicio import (
+    Estimacion,
+    LIMITE_RETRASO_MIN,
+    ServicioEta,
+    Viaje,
+)
+
+
+@pytest.fixture
+def servicio():
+    s = ServicioEta()
+    # Reemplazo los simulados por mocks para controlar cada dependencia.
+    s.fabrica_gps = MagicMock()
+    s.fabrica_eta = MagicMock()
+    s.publicador = MagicMock()
+    return s
+
+
+@pytest.fixture
+def viaje():
+    v = Viaje("V-001", "ABC-123", "OPERADOR_A")
+    # verificar_eta depende del estado del viaje; aquí lo aislamos.
+    v.verificar_eta = MagicMock()
+    return v
+
+
+def configurar(servicio, pos, minutos=None):
+    """Deja el GPS devolviendo `pos` y la estrategia devolviendo `minutos`."""
+    gps = MagicMock()
+    gps.leer.return_value = pos
+    servicio.fabrica_gps.crear.return_value = gps
+    estrategia = MagicMock()
+    estrategia.estimar.return_value = minutos
+    servicio.fabrica_eta.crear.return_value = estrategia
+    return gps, estrategia
+
+
+# ---------- camino feliz ----------
+
+def test_eta_normal_devuelve_estimacion_valida(servicio, viaje):
+    pos = (-16.40, -71.53)
+    configurar(servicio, pos, minutos=LIMITE_RETRASO_MIN - 1)
+
+    resultado = servicio.consultar_eta(viaje, "P-10")
+
+    assert resultado == Estimacion(LIMITE_RETRASO_MIN - 1, True)
+
+
+def test_eta_normal_registra_posicion_en_el_viaje(servicio, viaje):
+    pos = (-16.40, -71.53)
+    configurar(servicio, pos, minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    assert viaje.posiciones[-1] == pos
+
+
+def test_eta_normal_publica_solo_eta_calculado(servicio, viaje):
+    configurar(servicio, (1, 2), minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    servicio.publicador.publicar.assert_called_once_with(
+        "eta_calculado", {"id": "V-001", "paradero": "P-10", "minutos": 5}
+    )
+
+
+def test_estrategia_recibe_posicion_y_paradero(servicio, viaje):
+    pos = (1, 2)
+    _, estrategia = configurar(servicio, pos, minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    estrategia.estimar.assert_called_once_with(pos, "P-10")
+
+
+# ---------- uso de dependencias ----------
+
+def test_verifica_el_viaje_antes_de_consultar(servicio, viaje):
+    configurar(servicio, (1, 2), minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    viaje.verificar_eta.assert_called_once_with()
+
+
+def test_gps_se_crea_con_el_operador_y_lee_la_placa(servicio, viaje):
+    gps, _ = configurar(servicio, (1, 2), minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    servicio.fabrica_gps.crear.assert_called_once_with("OPERADOR_A")
+    gps.leer.assert_called_once_with("ABC-123")
+
+
+def test_algoritmo_por_defecto_es_mapas(servicio, viaje):
+    configurar(servicio, (1, 2), minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    servicio.fabrica_eta.crear.assert_called_once_with("MAPAS")
+
+
+@pytest.mark.parametrize("algoritmo", ["MAPAS", "LLM", "GPS"])
+def test_algoritmo_indicado_se_pasa_a_la_fabrica(servicio, viaje, algoritmo):
+    configurar(servicio, (1, 2), minutos=5)
+
+    servicio.consultar_eta(viaje, "P-10", algoritmo=algoritmo)
+
+    servicio.fabrica_eta.crear.assert_called_once_with(algoritmo)
+
+
+# ---------- retraso ----------
+
+def test_retraso_publica_eta_calculado_y_retraso_detectado(servicio, viaje):
+    minutos = LIMITE_RETRASO_MIN + 1
+    configurar(servicio, (1, 2), minutos=minutos)
+
+    resultado = servicio.consultar_eta(viaje, "P-10")
+
+    datos = {"id": "V-001", "paradero": "P-10", "minutos": minutos}
+    assert servicio.publicador.publicar.call_args_list == [
+        (("eta_calculado", datos),),
+        (("retraso_detectado", datos),),
+    ]
+    assert resultado == Estimacion(minutos, True)
+
+
+def test_en_el_limite_exacto_no_hay_retraso(servicio, viaje):
+    # La condición es estrictamente mayor (>), así que el límite no cuenta.
+    configurar(servicio, (1, 2), minutos=LIMITE_RETRASO_MIN)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    eventos = [c.args[0] for c in servicio.publicador.publicar.call_args_list]
+    assert eventos == ["eta_calculado"]
+
+
+def test_cero_minutos_no_es_retraso(servicio, viaje):
+    configurar(servicio, (1, 2), minutos=0)
+
+    resultado = servicio.consultar_eta(viaje, "P-10")
+
+    eventos = [c.args[0] for c in servicio.publicador.publicar.call_args_list]
+    assert eventos == ["eta_calculado"]
+    assert resultado == Estimacion(0, True)
+
+
+# ---------- sin señal ----------
+
+def test_sin_senal_devuelve_estimacion_invalida(servicio, viaje):
+    configurar(servicio, None)
+
+    resultado = servicio.consultar_eta(viaje, "P-10")
+
+    assert resultado == Estimacion(0, False)
+
+
+def test_sin_senal_publica_solo_sin_senal(servicio, viaje):
+    configurar(servicio, None)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    servicio.publicador.publicar.assert_called_once_with(
+        "sin_senal", {"id": "V-001"}
+    )
+
+
+def test_sin_senal_no_estima_ni_guarda_posicion(servicio, viaje):
+    _, estrategia = configurar(servicio, None)
+
+    servicio.consultar_eta(viaje, "P-10")
+
+    estrategia.estimar.assert_not_called()
+    assert len(viaje.posiciones) == 0
+
+
+# ---------- errores ----------
+
+def test_si_verificar_eta_falla_se_propaga_y_no_se_consulta_nada(servicio, viaje):
+    viaje.verificar_eta.side_effect = ValueError("viaje no habilitado")
+
+    with pytest.raises(ValueError, match="viaje no habilitado"):
+        servicio.consultar_eta(viaje, "P-10")
+
+    servicio.fabrica_gps.crear.assert_not_called()
+    servicio.publicador.publicar.assert_not_called()
+
+
+def test_algoritmo_invalido_propaga_el_error_de_la_fabrica(servicio, viaje):
+    servicio.fabrica_eta.crear.side_effect = KeyError("INEXISTENTE")
+
+    with pytest.raises(KeyError):
+        servicio.consultar_eta(viaje, "P-10", algoritmo="INEXISTENTE")
+
+    servicio.publicador.publicar.assert_not_called()
+```
+
+Se ejecuta con `pytest test_consultar_eta.py -v`.
+
+**Qué cubre**
+- Camino feliz: resultado, posición guardada, evento publicado y argumentos que recibe la estrategia.
+- Dependencias: `verificar_eta` se llama una vez, el GPS se crea con el operador y lee la placa, y el algoritmo por defecto es `"MAPAS"`.
+- Retraso: se publican los dos eventos en orden, y en `LIMITE_RETRASO_MIN` exacto no se publica retraso porque la comparación es `>`.
+- Sin señal: se publica `sin_senal`, se devuelve `Estimacion(0, False)` y no se estima ni se guarda posición.
+- Errores: si `verificar_eta` lanza una excepción se propaga y no ocurre nada más.
+
+**Supuestos que debes revisar**
+- Los atributos del servicio se llaman `fabrica_gps`, `fabrica_eta` y `publicador` (los usa la función), y se pueden reasignar.
+- `Estimacion` y `LIMITE_RETRASO_MIN` se importan de `rutasit.servicio`. Si están en otro módulo, ajusta el import. Comparo con `==`, que funciona si `Estimacion` es un `dataclass` o `namedtuple`. Si es una clase normal sin `__eq__`, cambia esos asserts por `resultado.minutos == ...` y el atributo del segundo campo.
+- `viaje.posiciones` empieza como lista vacía.
+- Reemplazo `verificar_eta` con un mock porque con el estado `PROGRAMADO` quizá lance error. Si quieres probar la integración real, haz otra prueba con `Viaje(..., estado="EN_RUTA")` (o el estado válido) sin mockearlo.
+- La prueba del algoritmo inválido asume que la fábrica lanza `KeyError`. Cambia la excepción por la que lance la tuya.

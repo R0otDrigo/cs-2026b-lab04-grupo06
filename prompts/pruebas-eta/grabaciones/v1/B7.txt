@@ -1,0 +1,136 @@
+Aqui tienes pruebas pytest para los tres estados. Como no se ve `EstadoViaje` ni la clase `Viaje`, uso un viaje falso (`ViajeFalso`) que solo registra las llamadas a `cambiar_a`. Asi las pruebas no dependen del resto del sistema. Ajusta el import `from estados import ...` al modulo real de tu proyecto.
+
+```python
+# test_estados_viaje.py
+import pytest
+
+from estados import Programado, EnRuta, Finalizado, Desviado, Detenido
+
+
+class ViajeFalso:
+    """Doble de prueba: registra los estados a los que se intenta cambiar."""
+
+    def __init__(self):
+        self.estados_solicitados = []
+
+    def cambiar_a(self, estado):
+        self.estados_solicitados.append(estado)
+
+
+@pytest.fixture
+def viaje():
+    return ViajeFalso()
+
+
+# ---------------------------------------------------------------- Programado
+
+class TestProgramado:
+    def test_nombre(self):
+        assert Programado.nombre == "PROGRAMADO"
+        assert Programado().nombre == "PROGRAMADO"
+
+    def test_iniciar_cambia_a_en_ruta(self, viaje):
+        Programado().iniciar(viaje)
+
+        assert len(viaje.estados_solicitados) == 1
+        assert isinstance(viaje.estados_solicitados[0], EnRuta)
+
+    def test_verificar_eta_lanza_value_error(self, viaje):
+        with pytest.raises(ValueError, match="El viaje aun no inicia"):
+            Programado().verificar_eta(viaje)
+
+    def test_verificar_eta_no_cambia_de_estado(self, viaje):
+        with pytest.raises(ValueError):
+            Programado().verificar_eta(viaje)
+
+        assert viaje.estados_solicitados == []
+
+
+# -------------------------------------------------------------------- EnRuta
+
+class TestEnRuta:
+    def test_nombre(self):
+        assert EnRuta.nombre == "EN_RUTA"
+        assert EnRuta().nombre == "EN_RUTA"
+
+    @pytest.mark.parametrize(
+        "metodo, estado_esperado",
+        [
+            ("marcar_desviado", Desviado),
+            ("marcar_detenido", Detenido),
+            ("finalizar", Finalizado),
+        ],
+    )
+    def test_transiciones(self, viaje, metodo, estado_esperado):
+        getattr(EnRuta(), metodo)(viaje)
+
+        assert len(viaje.estados_solicitados) == 1
+        assert isinstance(viaje.estados_solicitados[0], estado_esperado)
+
+    def test_verificar_eta_retorna_none(self, viaje):
+        assert EnRuta().verificar_eta(viaje) is None
+
+    def test_verificar_eta_no_cambia_de_estado(self, viaje):
+        EnRuta().verificar_eta(viaje)
+
+        assert viaje.estados_solicitados == []
+
+
+# ---------------------------------------------------------------- Finalizado
+
+class TestFinalizado:
+    def test_nombre(self):
+        assert Finalizado.nombre == "FINALIZADO"
+        assert Finalizado().nombre == "FINALIZADO"
+
+    def test_verificar_eta_lanza_value_error(self, viaje):
+        with pytest.raises(ValueError, match="El viaje ya finalizo"):
+            Finalizado().verificar_eta(viaje)
+
+    def test_verificar_eta_no_cambia_de_estado(self, viaje):
+        with pytest.raises(ValueError):
+            Finalizado().verificar_eta(viaje)
+
+        assert viaje.estados_solicitados == []
+
+
+# ------------------------------------------------- Transiciones no permitidas
+# Estas pruebas asumen que EstadoViaje (la clase base) lanza una excepcion
+# cuando se llama a un metodo que el estado no sobrescribe. Si tu clase base
+# hace otra cosa (por ejemplo, lanzar una excepcion propia o no hacer nada),
+# cambia el tipo de excepcion o la asercion.
+
+class TestTransicionesInvalidas:
+    @pytest.mark.parametrize(
+        "estado, metodo",
+        [
+            (Programado(), "finalizar"),
+            (Programado(), "marcar_desviado"),
+            (Programado(), "marcar_detenido"),
+            (EnRuta(), "iniciar"),
+            (Finalizado(), "iniciar"),
+            (Finalizado(), "finalizar"),
+            (Finalizado(), "marcar_desviado"),
+            (Finalizado(), "marcar_detenido"),
+        ],
+    )
+    def test_metodo_no_permitido_no_cambia_estado(self, viaje, estado, metodo):
+        try:
+            getattr(estado, metodo)(viaje)
+        except Exception:
+            pass  # lo importante es que no haya cambiado de estado
+
+        assert viaje.estados_solicitados == []
+```
+
+Para ejecutarlas: `pytest -v test_estados_viaje.py`
+
+Notas sobre lo que cubren:
+
+- **Nombres de estado:** verifican el atributo `nombre` de cada clase.
+- **Transiciones validas:** `Programado.iniciar` va a `EnRuta`. `EnRuta` va a `Desviado`, `Detenido` o `Finalizado` (con `parametrize` para no repetir codigo).
+- **`verificar_eta`:** `Programado` y `Finalizado` lanzan `ValueError` con su mensaje. `EnRuta` devuelve `None`.
+- **Sin efectos secundarios:** comprueban que `verificar_eta` nunca llama a `cambiar_a`.
+- **Transiciones invalidas:** el ultimo bloque es el mas dependiente de `EstadoViaje`. Si la clase base lanza una excepcion concreta (por ejemplo `TransicionInvalida`), reemplaza `Exception` por esa y usa `pytest.raises` para que la prueba sea mas estricta.
+
+Si me compartes `EstadoViaje`, `Viaje` y `Desviado`/`Detenido`, puedo agregar pruebas de integracion (un `Viaje` real recorriendo `Programado -> EnRuta -> Finalizado`) y ajustar el bloque de transiciones invalidas.

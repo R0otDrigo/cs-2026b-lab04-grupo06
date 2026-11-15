@@ -1,0 +1,269 @@
+Aquí tienes un conjunto de pruebas con pytest. Uso una estrategia falsa que cuenta las llamadas, para comprobar cuándo se consulta a la interna y cuándo se responde desde el caché. Ajusta la línea de importación a la ruta real de tu módulo.
+
+```python
+from types import SimpleNamespace
+
+import pytest
+
+# Ajusta esta importación a tu proyecto
+from eta import ConCacheEta, EstrategiaEta
+
+
+def pos(lat, lon):
+    """Posición mínima: la función solo usa .lat y .lon."""
+    return SimpleNamespace(lat=lat, lon=lon)
+
+
+class InternaFalsa(EstrategiaEta):
+    """Estrategia interna que cuenta llamadas y devuelve un valor distinto cada vez."""
+
+    def __init__(self):
+        self.llamadas = []
+
+    def estimar(self, pos, paradero):
+        self.llamadas.append((pos, paradero))
+        return f"eta-{len(self.llamadas)}"
+
+
+class InternaQueFalla(EstrategiaEta):
+    """Falla las primeras `fallos` veces y luego responde bien."""
+
+    def __init__(self, fallos=1):
+        self.fallos = fallos
+        self.llamadas = 0
+
+    def estimar(self, pos, paradero):
+        self.llamadas += 1
+        if self.llamadas <= self.fallos:
+            raise RuntimeError("servicio caído")
+        return "eta-ok"
+
+
+@pytest.fixture
+def interna():
+    return InternaFalsa()
+
+
+@pytest.fixture
+def cache(interna):
+    return ConCacheEta(interna)
+
+
+# ---------- Comportamiento básico ----------
+
+def test_primera_llamada_delega_en_la_interna(cache, interna):
+    resultado = cache.estimar(pos(-16.4090, -71.5375), "P1")
+
+    assert resultado == "eta-1"
+    assert len(interna.llamadas) == 1
+
+
+def test_segunda_llamada_igual_usa_cache(cache, interna):
+    p = pos(-16.4090, -71.5375)
+
+    r1 = cache.estimar(p, "P1")
+    r2 = cache.estimar(p, "P1")
+
+    assert r1 == r2 == "eta-1"
+    assert len(interna.llamadas) == 1
+
+
+def test_devuelve_el_mismo_objeto_cacheado(interna):
+    objeto = object()
+    interna.estimar = lambda pos_, paradero: objeto
+    cache = ConCacheEta(interna)
+
+    assert cache.estimar(pos(1.0, 1.0), "P1") is objeto
+    assert cache.estimar(pos(1.0, 1.0), "P1") is objeto
+
+
+def test_se_pasan_los_argumentos_originales_a_la_interna(cache, interna):
+    p = pos(-16.40904, -71.53751)
+
+    cache.estimar(p, "P1")
+
+    pos_recibida, paradero_recibido = interna.llamadas[0]
+    assert pos_recibida is p          # sin redondear
+    assert paradero_recibido == "P1"
+
+
+# ---------- Construcción de la clave ----------
+
+def test_posiciones_cercanas_comparten_clave_por_redondeo(cache, interna):
+    # Ambas redondean a (-16.409, -71.538) con 3 decimales
+    r1 = cache.estimar(pos(-16.40901, -71.53801), "P1")
+    r2 = cache.estimar(pos(-16.40904, -71.53798), "P1")
+
+    assert r1 == r2
+    assert len(interna.llamadas) == 1
+
+
+def test_posiciones_que_difieren_en_el_tercer_decimal_son_claves_distintas(cache, interna):
+    r1 = cache.estimar(pos(-16.409, -71.538), "P1")
+    r2 = cache.estimar(pos(-16.410, -71.538), "P1")
+
+    assert r1 != r2
+    assert len(interna.llamadas) == 2
+
+
+def test_cambiar_solo_la_longitud_genera_otra_entrada(cache, interna):
+    cache.estimar(pos(-16.409, -71.538), "P1")
+    cache.estimar(pos(-16.409, -71.540), "P1")
+
+    assert len(interna.llamadas) == 2
+
+
+def test_mismo_lugar_con_distinto_paradero_son_claves_distintas(cache, interna):
+    p = pos(-16.409, -71.538)
+
+    r1 = cache.estimar(p, "P1")
+    r2 = cache.estimar(p, "P2")
+
+    assert r1 != r2
+    assert len(interna.llamadas) == 2
+
+
+def test_cada_clave_distinta_se_cachea_por_separado(cache, interna):
+    a = cache.estimar(pos(-16.409, -71.538), "P1")
+    b = cache.estimar(pos(-16.500, -71.600), "P2")
+
+    # Repetimos ambas: no deben volver a llamar a la interna
+    assert cache.estimar(pos(-16.409, -71.538), "P1") == a
+    assert cache.estimar(pos(-16.500, -71.600), "P2") == b
+    assert len(interna.llamadas) == 2
+
+
+@pytest.mark.parametrize(
+    "lat_a, lat_b, mismo_cache",
+    [
+        (-16.4004, -16.4001, True),    # ambas -> -16.400
+        (-16.4006, -16.4014, False),   # -16.401 vs -16.401 ... ver nota abajo
+        (-16.4000, -16.4010, False),   # -16.400 vs -16.401
+        (0.0, -0.0001, True),          # ambas redondean a 0.0 / -0.0 (iguales como clave)
+    ],
+)
+def test_redondeo_a_tres_decimales(lat_a, lat_b, mismo_cache):
+    interna = InternaFalsa()
+    cache = ConCacheEta(interna)
+
+    cache.estimar(pos(lat_a, -71.0), "P1")
+    cache.estimar(pos(lat_b, -71.0), "P1")
+
+    esperado = 1 if mismo_cache else 2
+    # Nota: -16.4006 -> -16.401 y -16.4014 -> -16.401, así que en realidad comparten clave.
+    # Se calcula contra round() para que la prueba refleje la regla real.
+    if round(lat_a, 3) == round(lat_b, 3):
+        esperado = 1
+    else:
+        esperado = 2
+    assert len(interna.llamadas) == esperado
+
+
+# ---------- Solo se guardan respuestas exitosas ----------
+
+def test_si_la_interna_falla_la_excepcion_se_propaga():
+    cache = ConCacheEta(InternaQueFalla(fallos=1))
+
+    with pytest.raises(RuntimeError, match="servicio caído"):
+        cache.estimar(pos(-16.409, -71.538), "P1")
+
+
+def test_si_la_interna_falla_no_se_guarda_nada():
+    cache = ConCacheEta(InternaQueFalla(fallos=1))
+
+    with pytest.raises(RuntimeError):
+        cache.estimar(pos(-16.409, -71.538), "P1")
+
+    assert cache._cache == {}
+
+
+def test_tras_un_fallo_la_siguiente_llamada_reintenta_en_la_interna():
+    interna = InternaQueFalla(fallos=1)
+    cache = ConCacheEta(interna)
+    p = pos(-16.409, -71.538)
+
+    with pytest.raises(RuntimeError):
+        cache.estimar(p, "P1")
+
+    assert cache.estimar(p, "P1") == "eta-ok"   # la interna se recuperó
+    assert interna.llamadas == 2
+
+
+def test_despues_de_un_exito_ya_no_se_vuelve_a_llamar_a_la_interna():
+    interna = InternaQueFalla(fallos=1)
+    cache = ConCacheEta(interna)
+    p = pos(-16.409, -71.538)
+
+    with pytest.raises(RuntimeError):
+        cache.estimar(p, "P1")
+    cache.estimar(p, "P1")        # éxito, se guarda
+    cache.estimar(p, "P1")        # viene del caché
+
+    assert interna.llamadas == 2
+
+
+def test_un_fallo_en_una_clave_no_afecta_a_otras_ya_cacheadas():
+    class Mixta(EstrategiaEta):
+        def estimar(self, pos, paradero):
+            if paradero == "MALO":
+                raise ValueError("paradero inválido")
+            return f"eta-{paradero}"
+
+    cache = ConCacheEta(Mixta())
+    p = pos(-16.409, -71.538)
+
+    assert cache.estimar(p, "P1") == "eta-P1"
+    with pytest.raises(ValueError):
+        cache.estimar(p, "MALO")
+
+    assert cache.estimar(p, "P1") == "eta-P1"
+    assert len(cache._cache) == 1
+
+
+# ---------- Valores de retorno poco comunes ----------
+
+def test_cachea_tambien_un_resultado_none_o_cero():
+    # `if clave not in cache` (no `if not cache.get(...)`) debe respetar valores "falsy"
+    class Falsy(EstrategiaEta):
+        def __init__(self):
+            self.n = 0
+
+        def estimar(self, pos, paradero):
+            self.n += 1
+            return 0
+
+    interna = Falsy()
+    cache = ConCacheEta(interna)
+    p = pos(-16.409, -71.538)
+
+    assert cache.estimar(p, "P1") == 0
+    assert cache.estimar(p, "P1") == 0
+    assert interna.n == 1
+
+
+# ---------- Aislamiento ----------
+
+def test_dos_instancias_no_comparten_cache():
+    i1, i2 = InternaFalsa(), InternaFalsa()
+    c1, c2 = ConCacheEta(i1), ConCacheEta(i2)
+    p = pos(-16.409, -71.538)
+
+    c1.estimar(p, "P1")
+    c2.estimar(p, "P1")
+
+    assert len(i1.llamadas) == 1
+    assert len(i2.llamadas) == 1
+```
+
+Qué cubre cada bloque:
+
+- **Básico:** la primera llamada delega, la segunda sale del caché, y a la interna se le pasan los argumentos originales (sin redondear).
+- **Clave:** el redondeo a 3 decimales hace que posiciones muy cercanas compartan entrada, que un cambio en el tercer decimal cree otra, y que el paradero forme parte de la clave.
+- **Solo éxitos:** es la garantía del docstring. Si la interna lanza una excepción, esta se propaga, no queda nada en `_cache` y la siguiente llamada vuelve a intentarlo.
+- **Casos límite:** resultados "falsy" (`0`, `None`) que igual deben cachearse, e instancias independientes entre sí.
+
+Observaciones:
+
+1. El caso parametrizado de redondeo (`test_redondeo_a_tres_decimales`) es el más flojo: lo escribí comparando contra `round()` para no depender de decimales binarios, pero es redundante con las pruebas anteriores. Si prefieres un conjunto más limpio, puedes borrarlo sin perder cobertura.
+2. Algunas pruebas leen `cache._cache`. Es un atributo privado, así que si lo renombras se romperán. Si quieres evitarlo, deja solo las pruebas que cuentan llamadas a la interna.
+3. Hay un detalle del diseño que conviene saber: la clave usa `round()` con valores `float`, y `round(-0.0001, 3)` da `-0.0`, que como clave de diccionario es igual a `0.0`, así que no hay problema. En cambio, el caché no tiene límite de tamaño ni expiración, de modo que una ETA cacheada nunca se actualiza. Si eso importa en tu simulador, vale la pena añadir una prueba cuando implementes un TTL.
