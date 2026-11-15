@@ -1,0 +1,50 @@
+**Historia de usuario:** Como pasajero, quiero buscar un paradero por su nombre y ver los próximos buses que llegan para planear mi salida.
+
+## Criterios de aceptación
+
+### 1. Búsqueda por nombre
+- **Dado** que estoy en la pantalla de búsqueda, **cuando** escribo al menos 2 caracteres del nombre de un paradero, **entonces** el sistema muestra una lista de paraderos cuyo nombre contiene el texto ingresado.
+- La búsqueda no distingue entre mayúsculas y minúsculas ni toma en cuenta tildes (por ejemplo, "Plaza de Armas" y "plaza de armas" dan el mismo resultado).
+- Cada resultado muestra el nombre del paradero y una referencia de ubicación (calle, avenida o distrito).
+- Los resultados se actualizan mientras el usuario escribe, en menos de 1 segundo en condiciones normales.
+- Si hay más de 10 coincidencias, se muestran ordenadas por relevancia (primero las que empiezan con el texto buscado) y se permite desplazarse para ver más.
+
+### 2. Paradero no encontrado
+- **Dado** que escribo un nombre que no coincide con ningún paradero, **cuando** se ejecuta la búsqueda, **entonces** se muestra el mensaje "No se encontraron paraderos con ese nombre" y una sugerencia para revisar la ortografía.
+- Si el campo de búsqueda está vacío, no se muestra ningún resultado y no se genera ningún error.
+
+### 3. Selección de un paradero
+- **Dado** que veo la lista de resultados, **cuando** selecciono un paradero, **entonces** el sistema muestra la pantalla de llegadas de ese paradero.
+- La pantalla de llegadas muestra el nombre del paradero seleccionado de forma visible.
+
+### 4. Visualización de próximos buses
+- **Dado** que estoy en la pantalla de llegadas de un paradero, **entonces** veo una lista de los próximos buses que llegarán, ordenada del más cercano al más lejano en tiempo.
+- Cada bus de la lista muestra:
+  - Número o nombre de la línea/ruta.
+  - Destino o sentido del recorrido.
+  - Tiempo estimado de llegada en minutos (por ejemplo, "5 min"). Si faltan menos de 1 minuto, se muestra "Llegando".
+- Se muestran como mínimo los próximos 5 buses, o todos los disponibles si hay menos.
+- Un bus que ya pasó por el paradero deja de aparecer en la lista.
+
+### 5. Actualización de la información
+- La información de llegadas se actualiza automáticamente cada 30 segundos sin que el usuario tenga que recargar la pantalla.
+- Se muestra la hora de la última actualización.
+- El usuario puede actualizar manualmente (por ejemplo, deslizando hacia abajo o con un botón).
+
+### 6. Casos sin buses o con errores
+- **Dado** que no hay buses programados próximamente en el paradero, **entonces** se muestra el mensaje "No hay buses próximos en este paradero" en lugar de una lista vacía.
+- Si falla la conexión con el servicio de datos, se muestra un mensaje de error claro con la opción "Reintentar", y se conserva la última información cargada indicando su hora.
+- Si un bus no tiene estimación disponible, se muestra "Sin estimación" en lugar de un valor incorrecto.
+
+### 7. Rendimiento y usabilidad
+- La lista de llegadas se carga en menos de 3 segundos tras seleccionar el paradero.
+- La pantalla es legible y utilizable en dispositivos móviles y de escritorio.
+- Los elementos interactivos tienen un tamaño y contraste suficientes para ser usados con facilidad (accesibilidad básica).
+
+## Definición de terminado (resumen)
+- Se puede buscar un paradero por nombre y seleccionarlo.
+- Se ven los próximos buses con línea, destino y tiempo estimado, ordenados por cercanía.
+- Los datos se actualizan automáticamente y los casos de error o sin resultados están manejados.
+- Los criterios anteriores fueron probados y validados con casos de prueba.
+
+Si quieres, puedo reescribirlos en formato Gherkin completo (Dado/Cuando/Entonces) o convertirlos en casos de prueba.

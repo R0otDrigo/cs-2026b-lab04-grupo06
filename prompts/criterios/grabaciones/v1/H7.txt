@@ -1,0 +1,49 @@
+**Historia de usuario:** Como pasajero, quiero que la aplicación sea rápida y fácil de usar.
+
+Los términos "rápida" y "fácil" son subjetivos, así que los traduje a criterios medibles y verificables.
+
+## Criterios de aceptación: rapidez
+
+**CA1. Tiempo de inicio**
+- Dado que el pasajero abre la aplicación, cuando se carga la pantalla principal, entonces esta debe ser utilizable en un máximo de 3 segundos con conexión 4G y en un dispositivo de gama media.
+
+**CA2. Tiempo de respuesta de las acciones**
+- Dado que el pasajero realiza una acción habitual (buscar una ruta, consultar un horario o ver un paradero), cuando envía la solicitud, entonces el sistema muestra el resultado en un máximo de 2 segundos en el 95 % de los casos.
+
+**CA3. Retroalimentación durante la carga**
+- Dado que una operación tarda más de 1 segundo, cuando está en proceso, entonces la aplicación muestra un indicador de carga y no deja la pantalla congelada o en blanco.
+
+**CA4. Conexión lenta o inestable**
+- Dado que la conexión es lenta o se pierde, cuando el pasajero usa la aplicación, entonces esta muestra un mensaje claro y conserva la información consultada recientemente (por ejemplo, rutas favoritas o el último itinerario).
+
+**CA5. Fluidez de la interfaz**
+- Dado que el pasajero navega entre pantallas, entonces las transiciones y el desplazamiento no presentan bloqueos perceptibles (mínimo 30 fps).
+
+## Criterios de aceptación: facilidad de uso
+
+**CA6. Pocos pasos para las tareas principales**
+- Dado que el pasajero quiere realizar una tarea principal (buscar una ruta de origen a destino o consultar el próximo transporte), entonces puede completarla en un máximo de 3 toques/pasos desde la pantalla principal.
+
+**CA7. Navegación clara**
+- Dado que el pasajero es nuevo, cuando abre la aplicación por primera vez, entonces puede identificar las funciones principales sin instrucciones ni tutorial extenso, y la navegación principal está siempre visible o accesible.
+
+**CA8. Prueba de usabilidad con usuarios**
+- Dado un grupo de al menos 5 pasajeros que usan la aplicación por primera vez, cuando se les pide completar las tareas principales, entonces al menos el 80 % las completa sin ayuda y la calificación de facilidad de uso (escala SUS) es de al menos 70 puntos.
+
+**CA9. Mensajes de error comprensibles**
+- Dado que ocurre un error (dirección no encontrada, falta de conexión), entonces el mensaje usa lenguaje sencillo, explica qué pasó e indica qué hacer a continuación.
+
+**CA10. Legibilidad y accesibilidad**
+- Dado que el pasajero usa la aplicación en distintos entornos (exterior, movimiento), entonces los textos tienen un tamaño mínimo legible (16 px aproximadamente), los botones tienen un área táctil de al menos 44x44 px y se cumple un contraste adecuado (WCAG AA).
+
+**CA11. Consistencia**
+- Dado que el pasajero usa distintas pantallas, entonces los íconos, colores, textos y la ubicación de los botones son consistentes en toda la aplicación.
+
+## Definición de terminado (sugerida)
+- Las pruebas de rendimiento confirman CA1, CA2 y CA5 en al menos dos dispositivos de gama media y baja.
+- Las pruebas de usabilidad confirman CA6 a CA8.
+- La revisión de accesibilidad confirma CA10.
+- El Product Owner valida los criterios en un entorno de pruebas.
+
+## Recomendación
+Si el equipo lo considera adecuado, conviene dividir esta historia en dos: una sobre rendimiento ("rápida") y otra sobre usabilidad ("fácil de usar"). Así cada una se puede estimar, probar y entregar de forma independiente. También conviene confirmar con el Product Owner los umbrales numéricos (3 s, 2 s, 80 %, etc.) según los dispositivos y las redes de los pasajeros reales.
