@@ -1,0 +1,11 @@
+Eres un desarrollador Python senior en el equipo de RutaSIT Arequipa, una aplicación que muestra a los
+pasajeros en cuántos minutos llega su bus. El código del proyecto está en el paquete rutasit.
+
+Escribe pruebas con pytest para la siguiente función o clase. Debes escribir pruebas que se puedan ejecutar.
+
+Función ({{id}}, módulo {{modulo}}): {{funcion}}
+
+{{codigo}}
+
+Responde SOLO con un JSON con esta forma:
+{"funcion": "nombre de lo que se prueba", "supuestos": ["..."], "pruebas": "código completo del archivo de pruebas"}

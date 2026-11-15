@@ -1,0 +1,58 @@
+**Historia de usuario:** Como operador, quiero agregar un paradero a una ruta para que los pasajeros lo vean en el mapa.
+
+## Criterios de aceptación
+
+**1. Agregar un paradero existente a una ruta**
+- **Dado** que soy un operador autenticado y estoy editando una ruta,
+- **cuando** selecciono un paradero del catálogo y confirmo que lo agrego,
+- **entonces** el paradero queda asociado a la ruta y aparece en la lista de paradas de esa ruta.
+
+**2. Definir la posición del paradero en la ruta**
+- **Dado** que la ruta ya tiene paraderos,
+- **cuando** agrego uno nuevo e indico su posición (por ejemplo, entre el paradero 3 y el 4),
+- **entonces** el paradero se inserta en esa posición y los paraderos siguientes se reordenan automáticamente.
+- Si no indico posición, el paradero se agrega al final de la ruta.
+
+**3. Visualización en el mapa**
+- **Dado** que el paradero fue agregado a la ruta,
+- **cuando** un pasajero abre el mapa y consulta esa ruta,
+- **entonces** ve el paradero marcado en su ubicación geográfica correcta, conectado en el orden definido, con su nombre visible.
+- El cambio debe reflejarse en el mapa en un tiempo máximo de [X] minutos (valor a acordar con el equipo).
+
+**4. Validación de duplicados**
+- **Dado** que un paradero ya pertenece a la ruta,
+- **cuando** intento agregarlo nuevamente,
+- **entonces** el sistema lo impide y muestra el mensaje: "Este paradero ya forma parte de la ruta".
+- Excepción: si la ruta es circular y el paradero inicial y final coinciden, se permite esa repetición explícita.
+
+**5. Validación de datos del paradero**
+- **Dado** que intento agregar un paradero sin coordenadas válidas (latitud entre -90 y 90, longitud entre -180 y 180) o sin nombre,
+- **cuando** confirmo la acción,
+- **entonces** el sistema no guarda el cambio y señala qué campos faltan o son inválidos.
+
+**6. Confirmación y manejo de errores**
+- **Dado** que agrego un paradero correctamente,
+- **entonces** el sistema muestra un mensaje de confirmación (por ejemplo, "Paradero agregado a la ruta").
+- **Dado** que ocurre un error al guardar (fallo de conexión o del servidor),
+- **entonces** el sistema muestra un mensaje de error claro, no guarda cambios parciales y permite reintentar sin perder lo que el operador ingresó.
+
+**7. Permisos**
+- **Dado** que un usuario no tiene rol de operador (por ejemplo, un pasajero),
+- **cuando** intenta acceder a la función de agregar paraderos,
+- **entonces** el sistema deniega el acceso y no modifica la ruta.
+
+**8. Trazabilidad**
+- Cada vez que se agrega un paradero, el sistema registra qué operador lo hizo, en qué ruta, en qué posición y en qué fecha y hora.
+
+**9. Rutas en servicio**
+- **Dado** que la ruta está activa y con servicio en curso,
+- **cuando** se agrega un paradero,
+- **entonces** el sistema muestra una advertencia sobre el impacto en los pasajeros y pide confirmación antes de aplicar el cambio.
+
+## Fuera de alcance (a confirmar)
+- Crear un paradero nuevo desde cero (se asume que ya existe en el catálogo).
+- Quitar o mover paraderos de una ruta.
+- Cálculo automático de tiempos o frecuencias entre paraderos.
+
+## Notas
+- Si el equipo usa otro formato, estos criterios pueden reescribirse como lista de verificación simple. Conviene definir con el equipo los valores marcados entre corchetes y confirmar si la historia incluye crear paraderos nuevos, ya que cambiaría el alcance.

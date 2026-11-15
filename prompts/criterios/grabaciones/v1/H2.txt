@@ -1,0 +1,40 @@
+**Historia de usuario:** Como pasajero, quiero ver en un mapa la ubicación de los buses de mi ruta para saber por dónde van.
+
+## Criterios de aceptación
+
+**1. Visualización del mapa**
+- Dado que el pasajero ha seleccionado una ruta, cuando abre la vista de mapa, entonces el sistema muestra un mapa con el trazado de esa ruta y las paradas.
+- El mapa se centra automáticamente en la ruta seleccionada, de modo que se vea completa al abrirse.
+
+**2. Ubicación de los buses**
+- Dado que hay buses en servicio en la ruta seleccionada, cuando el pasajero ve el mapa, entonces cada bus activo aparece como un marcador en su posición actual.
+- Solo se muestran los buses de la ruta seleccionada, no los de otras rutas.
+- Cada marcador identifica el bus (por ejemplo, número o placa) y su sentido de recorrido.
+
+**3. Actualización de la posición**
+- La posición de los buses se actualiza automáticamente cada N segundos (por ejemplo, 5 s) sin que el pasajero recargue la vista.
+- Al actualizarse, el marcador se mueve de forma fluida y no reaparece ni parpadea.
+- La vista indica la hora de la última actualización.
+
+**4. Información al seleccionar un bus**
+- Cuando el pasajero toca o hace clic en un marcador, el sistema muestra los datos del bus: ruta, velocidad aproximada, próxima parada y tiempo estimado de llegada.
+
+**5. Sin buses disponibles**
+- Dado que no hay buses en servicio en la ruta, cuando el pasajero abre el mapa, entonces ve el trazado de la ruta y un mensaje claro como "No hay buses en servicio en este momento".
+
+**6. Manejo de errores**
+- Si se pierde la conexión o falla la obtención de datos, el sistema muestra un aviso visible y conserva la última posición conocida, marcada como desactualizada.
+- Cuando la conexión se restablece, la actualización automática se reanuda sola.
+
+**7. Rendimiento**
+- El mapa y los buses se muestran en menos de 3 segundos en condiciones normales de conexión.
+- El retraso entre la posición real del bus y la mostrada no supera los 10 segundos.
+
+**8. Usabilidad y accesibilidad**
+- El mapa permite hacer zoom y desplazarse.
+- Los marcadores son distinguibles de las paradas y tienen un contraste suficiente.
+- La vista funciona correctamente en pantallas móviles y de escritorio.
+
+## Observaciones
+- Los valores (5 s, 3 s, 10 s) son ejemplos; conviene ajustarlos con el equipo y con las capacidades reales del sistema de posicionamiento.
+- Si el alcance lo requiere, se pueden separar en historias distintas el ETA, el manejo de errores y la selección de ruta.
