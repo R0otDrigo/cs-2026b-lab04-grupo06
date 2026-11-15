@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pruebas pytest generadas para una funcion de RutaSIT",
+  "type": "object",
+  "required": ["funcion", "supuestos", "pruebas"],
+  "additionalProperties": false,
+  "properties": {
+    "funcion": {"type": "string", "minLength": 3},
+    "supuestos": {"type": "array", "items": {"type": "string", "minLength": 5}},
+    "pruebas": {"type": "string", "minLength": 30}
+  }
+}
