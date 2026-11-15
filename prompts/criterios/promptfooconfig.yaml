@@ -9,6 +9,10 @@ prompts:
     label: v2
   - id: file://v3.txt
     label: v3
+  - id: file://v4.txt
+    label: v4
+  - id: file://v5.txt
+    label: v5
 providers:
   - id: file://../proveedor_grabado.py
     label: asistente-grabado
