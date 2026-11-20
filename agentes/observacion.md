@@ -1,6 +1,32 @@
-# Observación del sistema agéntico (E4 y E5)
+# Observación del sistema agéntico (E4, E5 y E7)
 
 Todas las cifras salen de `trazas/<corrida>/metricas.json` y `resumen.json`, generados por `orquestador.py` y `agente/traza.py`. Los gráficos se regeneran con `python diagramas/metricas.py`.
+
+## E7. Métricas de las trazas de los 3 issues
+
+"Pasos" cuenta cada decisión del modelo, incluida la final. "Contexto final" es el tamaño del historial de cada agente al terminar (suma de agentes; ~4 caracteres por token).
+
+| Corrida | Issue | Pasos | Rondas | Herramientas usadas | Rechazadas por contrato | Bloqueadas por política | Contexto final (car.) | Resultado |
+|---|---|---|---|---|---|---|---|---|
+| `issue1_unico` (E2) | 1 | 8 | 1 | leer_archivo ×2, ejecutar_comando ×3, editar_archivo, ejecutar_pruebas | 0 | 0 | 10 907 | 4/4 del issue |
+| `issue2_unico` (E5) | 2 | 7 | 1 | leer_archivo ×2, ejecutar_comando ×2, editar_archivo, ejecutar_pruebas | 0 | 0 | 6 759 | 3/3, con un `TypeError` latente |
+| `issue2_coordinado` (E5) | 2 | 20 | 2 | leer_archivo ×4, ejecutar_pruebas ×4, ver_cambios ×2, ejecutar_comando ×2, editar_archivo ×2, buscar | 0 | 0 | 30 399 | 3/3, revisor: APROBADO |
+| `issue2_coordinado_humano` (E6) | 2 | 20 | 2 | igual que la anterior + 2 aprobaciones humanas (`s`, `s`) | 0 | 0 | 30 399 | 3/3, 2 ediciones aprobadas |
+| `issue3_unico` | 3 | 9 | 1 | ejecutar_comando ×3, leer_archivo ×2, buscar, editar_archivo, ejecutar_pruebas | 0 | 1 (`python -c`) | 9 391 | 3/3 del issue |
+| `issue3_unico_mapa` (E4) | 3 | 10 | 1 | leer_archivo ×2, ejecutar_comando ×2, anotar ×2, mapa_repo, editar_archivo, ejecutar_pruebas | 0 | 0 | 13 682 | 3/3 del issue |
+
+![Métricas por corrida](diagramas/img/e7_metricas_issues.png)
+
+Lectura:
+
+- Los 3 issues quedaron resueltos sin tocar pruebas (`cambios.diff` de cada corrida solo modifica `src/rutasit/`). Al aplicar los tres cambios juntos, `tests/` pasa 12/12 y `test/` 114/114.
+- Ninguna decisión fue rechazada por el contrato en estas corridas. Las 7 formas inválidas de `pruebas_agente/test_rutasit.py` (campo de más, `args` como texto, acción vacía, JSON dentro de un bloque de código, etc.) comprueban que el contrato sí las rechaza si aparecen al grabar con `--interactivo`.
+- La única acción bloqueada fue `python -c "..."` en el issue 3: el agente quiso calcular distancias con código propio. La política solo deja `python -m pytest`. El agente siguió leyendo el código y resolvió igual.
+- El mayor consumo de contexto de un solo agente fue el del revisor de la ronda 1 del issue 2 (9 642 caracteres), porque leyó `servicio.py` completo para revisar a los llamadores.
+
+Diagrama de la trayectoria del issue 2 con actor-crítico y aprobación humana (`trazas/issue2_coordinado_humano/trayectoria.png`):
+
+![Trayectoria issue 2](trazas/issue2_coordinado_humano/trayectoria.png)
 
 ## E4. Herramienta nueva (`mapa_repo`) y memoria de notas
 
