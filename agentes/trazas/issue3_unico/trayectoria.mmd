@@ -1,0 +1,24 @@
+sequenceDiagram
+    autonumber
+    actor U as Humano
+    participant EJ as Agente ReAct
+    participant P as Política
+    participant H as Herramientas
+    U->>EJ: objetivo (issue)
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de ISSUE-03.md
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 2 failed, 1 passed
+    EJ->>H: buscar
+    H-->>EJ: 2 coincidencia(s)
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de desvio.py
+    EJ-xP: ejecutar_comando
+    P--xEJ: BLOQUEADO
+    EJ->>H: editar_archivo
+    H-->>EJ: OK, archivo modificado
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 3 passed
+    EJ->>H: ejecutar_pruebas
+    H-->>EJ: 5 failed, 66 passed, 1 xfailed
+    EJ-->>U: resumen final (el humano revisa el PR)

@@ -1,11 +1,16 @@
 """Herramientas del agente. Cada una es una función pequeña, con descripción y parámetros explícitos.
 Todas operan DENTRO del directorio de trabajo (sandbox)."""
-import pathlib, subprocess, re, sys
+import ast, datetime, pathlib, subprocess, re, sys
+
+BASICAS = ("listar_archivos", "leer_archivo", "buscar", "ejecutar_pruebas", "editar_archivo",
+           "ver_cambios", "ejecutar_comando")
+EXTENDIDAS = ("mapa_repo", "anotar", "leer_notas")          # E4: herramienta nueva y memoria de notas
 
 
 class Herramientas:
-    def __init__(self, raiz: str):
+    def __init__(self, raiz: str, extendidas: bool = False):
         self.raiz = pathlib.Path(raiz).resolve()
+        self.extendidas = extendidas
 
     # --- utilidades ---
     def _ruta(self, ruta: str) -> pathlib.Path:
@@ -25,6 +30,15 @@ class Herramientas:
             "ver_cambios": "ver_cambios(): muestra el diff respecto de la versión original",
             "ejecutar_comando": "ejecutar_comando(comando): ejecuta un comando de shell (sujeto a la política)",
         }
+        if self.extendidas:
+            c.update({
+                "mapa_repo": ("mapa_repo(carpeta='src'): devuelve, sin leer el código completo, cada módulo .py "
+                              "con sus clases, métodos y funciones (firma y número de línea). Parámetro: carpeta "
+                              "(texto, ruta relativa dentro del sandbox). Úsela antes de leer archivos."),
+                "anotar": ("anotar(texto): agrega una línea a notas.md (hipótesis, archivos revisados, pendientes). "
+                           "Parámetro: texto (máx. 300 caracteres). Devuelve 'OK: nota N'."),
+                "leer_notas": "leer_notas(): devuelve las notas guardadas en notas.md o '(sin notas)'.",
+            })
         return c
 
     # --- herramientas ---
@@ -77,3 +91,45 @@ class Herramientas:
     def ejecutar_comando(self, comando):
         r = subprocess.run(comando, shell=True, cwd=self.raiz, capture_output=True, text=True, timeout=60)
         return (r.stdout + r.stderr).strip()[-2000:]
+
+    # --- E4: herramienta nueva ---
+    def mapa_repo(self, carpeta="src"):
+        base, lineas = self._ruta(carpeta), []
+        for p in sorted(base.rglob("*.py")):
+            if "__pycache__" in p.parts:
+                continue
+            try:
+                arbol = ast.parse(p.read_text(encoding="utf-8"))
+            except SyntaxError as e:
+                lineas.append(f"{p.relative_to(self.raiz).as_posix()}: ERROR de sintaxis en la línea {e.lineno}")
+                continue
+            elementos = []
+            for nodo in arbol.body:
+                if isinstance(nodo, ast.ClassDef):
+                    metodos = [f"{m.name}({', '.join(a.arg for a in m.args.args if a.arg != 'self')})"
+                               for m in nodo.body if isinstance(m, ast.FunctionDef) and not m.name.startswith("__")]
+                    elementos.append(f"  class {nodo.name} (l.{nodo.lineno}): " + (", ".join(metodos) or "-"))
+                elif isinstance(nodo, ast.FunctionDef):
+                    elementos.append(f"  def {nodo.name}({', '.join(a.arg for a in nodo.args.args)}) (l.{nodo.lineno})")
+            if elementos:
+                lineas.append(p.relative_to(self.raiz).as_posix())
+                lineas += elementos
+        return "\n".join(lineas) or "(sin módulos)"
+
+    # --- E4: memoria de notas (pizarra) ---
+    def anotar(self, texto):
+        texto = str(texto).strip().replace("\n", " ")
+        if not texto:
+            return "ERROR: la nota está vacía"
+        if len(texto) > 300:
+            return "ERROR: la nota supera 300 caracteres; resúmala"
+        notas = self.raiz / "notas.md"
+        previas = notas.read_text(encoding="utf-8").splitlines() if notas.exists() else ["# Notas del agente"]
+        n = sum(1 for l in previas if l.startswith("- "))
+        hora = datetime.datetime.now().strftime("%H:%M:%S")
+        notas.write_text("\n".join(previas + [f"- [{hora}] {texto}"]) + "\n", encoding="utf-8")
+        return f"OK: nota {n + 1}"
+
+    def leer_notas(self):
+        notas = self.raiz / "notas.md"
+        return notas.read_text(encoding="utf-8").strip() if notas.exists() else "(sin notas)"
