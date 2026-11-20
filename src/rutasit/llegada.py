@@ -11,6 +11,8 @@ VELOCIDAD_MINIMA_KMH = 5.0
 def minutos_hasta_paradero(km_bus: float, km_paradero: float, vel_kmh: float):
     """Minutos que faltan para que el bus llegue al paradero."""
     distancia_km = km_paradero - km_bus
+    if distancia_km < 0:
+        return None  # el bus ya paso el paradero: "ETA no disponible" (HU-01)
     return round(distancia_km / max(vel_kmh, VELOCIDAD_MINIMA_KMH) * 60)
 
 

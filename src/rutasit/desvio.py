@@ -29,9 +29,9 @@ def distancia_a_ruta(pos, trazado):
     """Metros entre la posicion del bus y el trazado [(lat, lon), ...] de la ruta."""
     lat_ref = trazado[0][0]
     p = _a_metros(pos.lat, pos.lon, lat_ref)
-    inicio = _a_metros(*trazado[0], lat_ref)
-    fin = _a_metros(*trazado[-1], lat_ref)
-    return _distancia_punto_segmento(p, inicio, fin)
+    puntos = [_a_metros(lat, lon, lat_ref) for lat, lon in trazado]
+    # Tramo mas cercano: en una curva la recta inicio-fin no representa la ruta (RF-04).
+    return min(_distancia_punto_segmento(p, a, b) for a, b in zip(puntos, puntos[1:]))
 
 
 def hay_desvio(posiciones, trazado) -> bool:
