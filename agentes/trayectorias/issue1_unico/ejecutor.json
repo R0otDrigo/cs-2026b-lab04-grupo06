@@ -1,0 +1,55 @@
+[
+ {
+  "pensamiento": "Primero leo el issue para saber qué se observa, qué se espera y qué prueba lo reproduce.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "issues/ISSUE-01.md"
+  }
+ },
+ {
+  "pensamiento": "Antes de tocar código reproduzco el error con la prueba del issue.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_01_gps_sin_datos.py"
+  }
+ },
+ {
+  "pensamiento": "Las 4 pruebas fallan en gps.py línea 27: AdaptadorGpsA.leer() indexa la respuesta sin comprobar que exista. Leo el módulo completo para ver cómo maneja el operador B la falta de señal.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/rutasit/gps.py"
+  }
+ },
+ {
+  "pensamiento": "El operador B ya devuelve None cuando no hay fix (línea 36) y ServicioEta trata None como sin señal. Corrijo el adaptador A igual: si la respuesta falta o le faltan lat, lon o vel_kmh, devuelvo None. No toco la prueba.",
+  "accion": "editar_archivo",
+  "args": {
+   "ruta": "src/rutasit/gps.py",
+   "antes": "        r = self._sdk.leer_posicion(placa)\n        return Posicion(r[\"lat\"], r[\"lon\"], r[\"vel_kmh\"])",
+   "despues": "        r = self._sdk.leer_posicion(placa)\n        if not r or any(r.get(campo) is None for campo in (\"lat\", \"lon\", \"vel_kmh\")):\n            return None  # sin datos: igual que el operador B, el servicio publica \"sin_senal\"\n        return Posicion(r[\"lat\"], r[\"lon\"], r[\"vel_kmh\"])"
+  }
+ },
+ {
+  "pensamiento": "Verifico la prueba del issue.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_01_gps_sin_datos.py"
+  }
+ },
+ {
+  "pensamiento": "Ahora toda la suite, para ver si hay regresiones.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "Quedan 3 fallos, pero son de llegada.py y desvio.py (issues 2 y 3, fuera de esta tarea). Las 68 pruebas restantes pasan, así que no hay regresiones. Reviso que la complejidad del adaptador siga baja.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "radon cc -s src/rutasit/gps.py"
+  }
+ },
+ {
+  "pensamiento": "La prueba del issue pasa, no hay regresiones y AdaptadorGpsA.leer queda en complejidad A (4). Termino y dejo el cambio para revisión humana.",
+  "final": "Issue #1 resuelto en src/rutasit/gps.py: AdaptadorGpsA.leer() devuelve None cuando el SDK no envía respuesta o le falta lat, lon o vel_kmh, igual que el adaptador del operador B. Con eso ServicioEta publica 'sin_senal' y responde ETA no disponible. Pruebas: 4/4 del issue en verde; en la suite completa quedan 3 fallos que corresponden a los issues #2 y #3. No modifiqué pruebas. Complejidad de leer(): A (4)."
+ }
+]

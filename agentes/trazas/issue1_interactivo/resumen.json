@@ -1,0 +1,16 @@
+{
+ "corrida": "issue1_interactivo",
+ "issue": 1,
+ "modo": "unico",
+ "herramientas": "basicas",
+ "humano": "no",
+ "rondas": 1,
+ "veredicto": "",
+ "pruebas_finales": "E       assert -2 is None\nE        +  where -2 = minutos_hasta_paradero(km_bus=3.0, km_paradero=2.0, vel_kmh=30)\nE       assert 1413.3878603462572 < 1.0\nE        +  where 1413.3878603462572 = distancia_a_ruta(Posicion(lat=-16.409, lon=-71.5188, vel_kmh=25.0), [(-16.409, -71.5375), (-16.409, -71.5188), (-16.3909, -71.5188)])\nE       assert False is True\nE        +  where False = hay_desvio([Posicion(lat=-16.4018, lon=-71.53, vel_kmh=25.0), Posicion(lat=-16.4009, lon=-71.5291, vel_kmh=25.0)], [(-16.409, -71.5375), (-16.409, -71.5188), (-16.3909, -71.5188)])\n3 failed, 68 passed, 1 xfailed in 0.18s",
+ "contexto": [
+  {
+   "agente": "ejecutor",
+   "caracteres": 7079
+  }
+ ]
+}
