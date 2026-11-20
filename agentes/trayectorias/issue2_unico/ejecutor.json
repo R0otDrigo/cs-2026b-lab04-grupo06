@@ -1,0 +1,48 @@
+[
+ {
+  "pensamiento": "Leo el issue para entender el síntoma y la prueba que lo reproduce.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "issues/ISSUE-02.md"
+  }
+ },
+ {
+  "pensamiento": "Reproduzco con la prueba del issue antes de cambiar nada.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_02_eta_paradero_pasado.py"
+  }
+ },
+ {
+  "pensamiento": "Falla el caso del bus que ya pasó: devuelve -2. Leo llegada.py, donde está minutos_hasta_paradero.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/rutasit/llegada.py"
+  }
+ },
+ {
+  "pensamiento": "La función resta km_paradero - km_bus sin revisar el signo. Si la distancia es negativa el bus ya pasó: devuelvo None, que representa 'ETA no disponible' según HU-01. Con distancia 0 sigue devolviendo 0.",
+  "accion": "editar_archivo",
+  "args": {
+   "ruta": "src/rutasit/llegada.py",
+   "antes": "    distancia_km = km_paradero - km_bus\n    return round(",
+   "despues": "    distancia_km = km_paradero - km_bus\n    if distancia_km < 0:\n        return None  # el bus ya paso el paradero: \"ETA no disponible\" (HU-01)\n    return round("
+  }
+ },
+ {
+  "pensamiento": "Verifico la prueba del issue.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_02_eta_paradero_pasado.py"
+  }
+ },
+ {
+  "pensamiento": "Corro la suite completa para descartar regresiones.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "Los 6 fallos restantes vienen de gps.py y desvio.py (issues #1 y #3); ninguno es de llegada.py. La prueba del issue pasa. Termino.",
+  "final": "Issue #2 resuelto en src/rutasit/llegada.py: minutos_hasta_paradero() devuelve None cuando el bus ya pasó el paradero (distancia negativa), que representa 'ETA no disponible' (HU-01). Si el bus está en el paradero devuelve 0. Pruebas del issue: 3/3. En la suite quedan 6 fallos de los issues #1 y #3. No modifiqué pruebas."
+ }
+]

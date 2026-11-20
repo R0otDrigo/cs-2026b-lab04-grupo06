@@ -1,0 +1,16 @@
+[
+ {
+  "pensamiento": "Reviso el diff acumulado de las dos rondas.",
+  "accion": "ver_cambios",
+  "args": {}
+ },
+ {
+  "pensamiento": "Compruebo que las pruebas siguen igual: solo fallos de otros issues.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "El diff toca solo llegada.py y servicio.py; la guarda va antes de publicar eventos, así que el pasajero ya no recibe 'None min' y no hay comparación con None. Apruebo.",
+  "final": "APROBADO. llegada.py devuelve None cuando el bus ya pasó y consultar_eta() lo traduce a ETA no disponible sin publicar eventos. Pruebas del issue en verde, sin regresiones (los 6 fallos son de los issues #1 y #3). Para el humano: agregar en tests/ una prueba de integración de consultar_eta con la estrategia RECORRIDO y aprobar el Pull Request."
+ }
+]
