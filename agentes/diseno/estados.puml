@@ -1,0 +1,44 @@
+@startuml estados
+skinparam dpi 170
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 12
+skinparam state {
+  BackgroundColor #EEF2F8
+  BorderColor #1A3A5C
+  ArrowColor #444444
+}
+title Máquina de estados del agente de RutaSIT (agentes/agente/nucleo.py + politica.py)
+
+[*] --> Decidiendo : objetivo (issue + reglas + catálogo + protocolo)
+Decidiendo : el modelo propone
+Decidiendo : pensamiento + acción o final
+Decidiendo --> ValidandoContrato : decisión
+ValidandoContrato : contrato.validar_decision()
+ValidandoContrato --> Decidiendo : [inválida] / ERROR DE CONTRATO\n(traza: CONTRATO_INVALIDO)
+ValidandoContrato --> Finalizado : [es "final"]
+ValidandoContrato --> EvaluandoPolitica : [es "accion"]
+ValidandoContrato --> LimiteAlcanzado : [presupuesto agotado]
+
+state EvaluandoPolitica {
+  [*] --> RevisandoReglas
+  RevisandoReglas : herramienta, comando, ruta protegida
+  RevisandoReglas --> EsperandoAprobacion : [editar_archivo y aprobar_edicion activo]
+  EsperandoAprobacion : la persona responde "s" o "n"
+  EsperandoAprobacion : (otra respuesta: se vuelve a preguntar)
+}
+EvaluandoPolitica --> Decidiendo : [denegada] / BLOQUEADO
+EsperandoAprobacion --> Decidiendo : [n] / RECHAZADO_POR_HUMANO
+EvaluandoPolitica --> LimiteAlcanzado : [paso > max_pasos]
+RevisandoReglas --> Ejecutando : [permitida]
+EsperandoAprobacion --> Ejecutando : [s]
+Ejecutando : herramienta real en el sandbox (trabajo/)
+Ejecutando --> Observando : resultado o error
+Observando : se agrega al historial y a la traza
+Observando --> Decidiendo
+Finalizado --> [*] : resumen para el humano / revisor
+LimiteAlcanzado --> [*] : sin respuesta final
+state Finalizado #EAF4EC
+state LimiteAlcanzado #F4CCC3
+state EsperandoAprobacion #FFF4D6
+@enduml

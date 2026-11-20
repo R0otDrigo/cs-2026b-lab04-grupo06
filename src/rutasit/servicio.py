@@ -37,7 +37,7 @@ class Estimacion:
 
 
 class ServicioEta:
-    def __init__(self, gps_a=None, gps_b=None, mapas=None, llm=None):
+    def __init__(self, gps_a=None, gps_b=None, mapas=None, llm=None, recorrido=None):
         gps_a, gps_b = gps_a or GpsOperadorA(), gps_b or GpsOperadorB()
         mapas, llm = mapas or MapasOSM(), llm or ClienteLLMFalso()
         self.fabrica_gps = FabricaGps()
@@ -50,6 +50,8 @@ class ServicioEta:
             ConCacheEta(ConReintentosEta(EtaPorMapas(proveedor))), EtaPorVelocidad())
         self.fabrica_eta.registrar("MAPAS", lambda: mapas_robusto)
         self.fabrica_eta.registrar("VELOCIDAD", EtaPorVelocidad)
+        if recorrido is not None:                      # EtaPorRecorrido (HU-01)
+            self.fabrica_eta.registrar("RECORRIDO", lambda: recorrido)
         self.eventos = []
         self.publicador = PublicadorEventos()
         self.publicador.suscribir("eta_calculado", NotificadorPasajero(self.eventos))

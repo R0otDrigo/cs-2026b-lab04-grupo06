@@ -1,0 +1,7 @@
+--- a/src/rutasit/gps.py
++++ b/src/rutasit/gps.py
+@@ -26,2 +26,4 @@
+         r = self._sdk.leer_posicion(placa)
++        if not r or any(r.get(campo) is None for campo in ("lat", "lon", "vel_kmh")):
++            return None  # sin datos: igual que el operador B, el servicio publica "sin_senal"
+         return Posicion(r["lat"], r["lon"], r["vel_kmh"])

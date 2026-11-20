@@ -1,0 +1,41 @@
+[
+ {
+  "pensamiento": "Primero leo el reporte y su prueba para precisar el fallo.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "issues/ISSUE-01.md"
+  }
+ },
+ {
+  "pensamiento": "Reviso el adaptador A y el B antes de editar.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/rutasit/gps.py"
+  }
+ },
+ {
+  "pensamiento": "El SDK A devuelve None o un diccionario incompleto; agrego una guarda de los tres campos obligatorios, como permite el contrato del puerto.",
+  "accion": "editar_archivo",
+  "args": {
+   "ruta": "src/rutasit/gps.py",
+   "antes": "        r = self._sdk.leer_posicion(placa)\n        return Posicion(r[\"lat\"], r[\"lon\"], r[\"vel_kmh\"])",
+   "despues": "        r = self._sdk.leer_posicion(placa)\n        if not isinstance(r, dict) or not all(k in r for k in (\"lat\", \"lon\", \"vel_kmh\")):\n            return None\n        return Posicion(r[\"lat\"], r[\"lon\"], r[\"vel_kmh\"])"
+  }
+ },
+ {
+  "pensamiento": "Compruebo el issue y las regresiones con la suite del sandbox.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "Los tres fallos restantes son de los issues 2 y 3; verifico que las cuatro pruebas del issue 1 estén verdes.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_01_gps_sin_datos.py"
+  }
+ },
+ {
+  "pensamiento": "El issue 1 pasa con cuatro pruebas y los únicos fallos de la suite pertenecen a los otros dos issues.",
+  "final": "Issue 1 resuelto en el sandbox: AdaptadorGpsA.leer devuelve None ante respuesta ausente o campos incompletos. Las cuatro pruebas del issue pasan; quedan tres fallos esperados de los issues 2 y 3. No modifiqué pruebas."
+ }
+]

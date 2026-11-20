@@ -1,0 +1,10 @@
+{
+ "ejecutor": {
+  "pasos": 6,
+  "permitidas": 5,
+  "herr:leer_archivo": 2,
+  "herr:editar_archivo": 1,
+  "herr:ejecutar_pruebas": 1,
+  "herr:ejecutar_comando": 1
+ }
+}

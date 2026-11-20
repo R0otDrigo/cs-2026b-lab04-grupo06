@@ -1,0 +1,7 @@
+--- a/src/rutasit/gps.py
++++ b/src/rutasit/gps.py
+@@ -26,2 +26,4 @@
+         r = self._sdk.leer_posicion(placa)
++        if not isinstance(r, dict) or not all(k in r for k in ("lat", "lon", "vel_kmh")):
++            return None
+         return Posicion(r["lat"], r["lon"], r["vel_kmh"])

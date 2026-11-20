@@ -2,3 +2,5 @@ __pycache__/
 .env
 radon.txt
 node_modules/
+agentes/trabajo/
+.pytest_cache/
