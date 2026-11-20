@@ -1,0 +1,16 @@
+{
+ "corrida": "issue3_unico_mapa",
+ "issue": 3,
+ "modo": "unico",
+ "herramientas": "extendidas",
+ "humano": "no",
+ "rondas": 1,
+ "veredicto": "",
+ "pruebas_finales": "E       TypeError: 'NoneType' object is not subscriptable\nE       KeyError: 'lat'\nE       KeyError: 'vel_kmh'\nE       TypeError: 'NoneType' object is not subscriptable\nE       assert -2 is None\nE        +  where -2 = minutos_hasta_paradero(km_bus=3.0, km_paradero=2.0, vel_kmh=30)\n5 failed, 66 passed, 1 xfailed in 0.07s",
+ "contexto": [
+  {
+   "agente": "ejecutor",
+   "caracteres": 13682
+  }
+ ]
+}

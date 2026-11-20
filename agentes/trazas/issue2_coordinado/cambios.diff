@@ -1,0 +1,14 @@
+--- a/src/rutasit/llegada.py
++++ b/src/rutasit/llegada.py
+@@ -13,2 +13,4 @@
+     distancia_km = km_paradero - km_bus
++    if distancia_km < 0:
++        return None  # el bus ya paso el paradero: "ETA no disponible" (HU-01)
+     return round(distancia_km / max(vel_kmh, VELOCIDAD_MINIMA_KMH) * 60)
+--- a/src/rutasit/servicio.py
++++ b/src/rutasit/servicio.py
+@@ -73,2 +73,4 @@
+         minutos = estrategia.estimar(pos, paradero)
++        if minutos is None:                      # p. ej. el bus ya paso el paradero (HU-01)
++            return Estimacion(0, False)
+         datos = {"id": viaje.id, "paradero": paradero, "minutos": minutos}

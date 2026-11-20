@@ -1,0 +1,62 @@
+[
+ {
+  "pensamiento": "Leo el issue: describe un fallo en rutas con curva.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "issues/ISSUE-03.md"
+  }
+ },
+ {
+  "pensamiento": "Reproduzco con la prueba del issue.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_03_desvio_curvas.py"
+  }
+ },
+ {
+  "pensamiento": "Fallan la esquina (1413 m, debería ser ~0) y el bus que corta la curva. Busco dónde se calcula la distancia a la ruta.",
+  "accion": "buscar",
+  "args": {
+   "patron": "def (distancia_a_ruta|hay_desvio)"
+  }
+ },
+ {
+  "pensamiento": "Está en src/rutasit/desvio.py. Lo leo completo.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/rutasit/desvio.py"
+  }
+ },
+ {
+  "pensamiento": "distancia_a_ruta solo usa trazado[0] y trazado[-1]: mide contra la recta inicio-fin. Antes de editar quiero confirmar con números cuánto da la esquina contra cada tramo.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -c \"import sys; sys.path.insert(0,'src'); from rutasit.desvio import _a_metros; print(_a_metros(-16.409,-71.5188,-16.409))\""
+  }
+ },
+ {
+  "pensamiento": "La política no permite ejecutar código arbitrario; no insisto. El código es suficiente: con una ruta en L, la recta inicio-fin pasa por dentro de la curva. Corrijo para medir el tramo más cercano entre puntos consecutivos.",
+  "accion": "editar_archivo",
+  "args": {
+   "ruta": "src/rutasit/desvio.py",
+   "antes": "    inicio = _a_metros(*trazado[0], lat_ref)\n    fin = _a_metros(*trazado[-1], lat_ref)\n    return _distancia_punto_segmento(p, inicio, fin)",
+   "despues": "    puntos = [_a_metros(lat, lon, lat_ref) for lat, lon in trazado]\n    # Tramo mas cercano: en una curva la recta inicio-fin no representa la ruta (RF-04).\n    return min(_distancia_punto_segmento(p, a, b) for a, b in zip(puntos, puntos[1:]))"
+  }
+ },
+ {
+  "pensamiento": "Verifico la prueba del issue.",
+  "accion": "ejecutar_comando",
+  "args": {
+   "comando": "python -m pytest -q tests/test_issue_03_desvio_curvas.py"
+  }
+ },
+ {
+  "pensamiento": "Suite completa para descartar regresiones.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "Los 5 fallos son de gps.py y llegada.py (issues #1 y #2). La prueba del issue pasa. Termino.",
+  "final": "Issue #3 resuelto en src/rutasit/desvio.py: distancia_a_ruta() mide la distancia al tramo más cercano del trazado (todos los pares de puntos consecutivos) en lugar de la recta entre el primer y el último punto. La esquina de la L queda a 0 m y el bus que corta la curva supera los 150 m en dos posiciones seguidas (RF-04). Pruebas del issue: 3/3; quedan 5 fallos de los issues #1 y #2. Un intento de ejecutar python -c fue bloqueado por la política. No modifiqué pruebas."
+ }
+]

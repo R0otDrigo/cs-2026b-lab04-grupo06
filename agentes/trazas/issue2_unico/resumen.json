@@ -1,0 +1,16 @@
+{
+ "corrida": "issue2_unico",
+ "issue": 2,
+ "modo": "unico",
+ "herramientas": "basicas",
+ "humano": "no",
+ "rondas": 1,
+ "veredicto": "",
+ "pruebas_finales": "E       TypeError: 'NoneType' object is not subscriptable\nE       KeyError: 'lat'\nE       KeyError: 'vel_kmh'\nE       TypeError: 'NoneType' object is not subscriptable\nE       assert 1413.3878603462572 < 1.0\nE        +  where 1413.3878603462572 = distancia_a_ruta(Posicion(lat=-16.409, lon=-71.5188, vel_kmh=25.0), [(-16.409, -71.5375), (-16.409, -71.5188), (-16.3909, -71.5188)])\n6 failed, 65 passed, 1 xfailed in 0.07s",
+ "contexto": [
+  {
+   "agente": "ejecutor",
+   "caracteres": 6759
+  }
+ ]
+}
