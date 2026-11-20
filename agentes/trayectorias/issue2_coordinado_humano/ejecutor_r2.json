@@ -1,0 +1,27 @@
+[
+ {
+  "pensamiento": "El revisor encontró que consultar_eta no maneja None. Leo servicio.py para hacer el cambio exacto.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/rutasit/servicio.py"
+  }
+ },
+ {
+  "pensamiento": "Agrego la guarda después de estimar: si la estrategia no puede dar minutos, respondo ETA no disponible y no publico eta_calculado ni retraso.",
+  "accion": "editar_archivo",
+  "args": {
+   "ruta": "src/rutasit/servicio.py",
+   "antes": "        minutos = estrategia.estimar(pos, paradero)\n        datos =",
+   "despues": "        minutos = estrategia.estimar(pos, paradero)\n        if minutos is None:                      # p. ej. el bus ya paso el paradero (HU-01)\n            return Estimacion(0, False)\n        datos ="
+  }
+ },
+ {
+  "pensamiento": "Corro la suite completa para comprobar que el cambio no rompe nada.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "Siguen 6 fallos, los mismos de los issues #1 y #3; las 65 restantes pasan. Termino la ronda 2.",
+  "final": "Ronda 2: atendí el pedido del revisor. ServicioEta.consultar_eta() ahora responde Estimacion(0, False) cuando la estrategia devuelve None (bus que ya pasó el paradero) y no publica eta_calculado ni retraso_detectado. Se mantiene el cambio de llegada.py de la ronda 1. Pruebas: las del issue pasan; los 6 fallos restantes son de los issues #1 y #3. No modifiqué pruebas; la prueba de integración queda para el humano."
+ }
+]

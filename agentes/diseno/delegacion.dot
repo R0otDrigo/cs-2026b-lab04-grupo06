@@ -1,0 +1,12 @@
+digraph G {
+  graph [rankdir=TB, fontname="Arial", bgcolor="white", nodesep=0.3, ranksep=0.35, pad=0.2];
+  node [shape=box, style="rounded,filled", fontname="Arial", fontsize=10, color="#1A3A5C", width=2.3];
+  edge [fontname="Arial", fontsize=9, color="#555555"];
+  e [label="1. Ejecutor\nla persona hace el cambio;\nel agente solo lee y sugiere", fillcolor="#EEF2F8"];
+  r [label="2. Revisor  ← HOY\nel agente edita en el sandbox;\nla persona aprueba cada edición\ny el Pull Request", fillcolor="#FFF4D6", penwidth=2];
+  c [label="3. Colaborador\nedita sin aprobación por edición\nen src/; la persona revisa\nel Pull Request", fillcolor="#EEF2F8"];
+  g [label="4. Gobernador\nabre Pull Requests solo;\nla persona fija la política,\naudita trazas y métricas", fillcolor="#EEF2F8"];
+  e -> r [label="contrato y política\nprobados"];
+  r -> c [label="20 ediciones aprobadas\nsin rechazo, 0 regresiones"];
+  c -> g [label="3 sprints sin PR\nrevertido ni bloqueo"];
+}

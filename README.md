@@ -289,3 +289,39 @@ Lo que aprendimos:
 ### Documentos
 
 - `prompts/seguridad/red-team.md`, `prompts/no-determinismo/analisis.md`, `prompts/bitacora-ia.md`, `prompts/cuestionario.md`, `prompts/PROCEDENCIA.md`.
+
+## Sistemas agénticos (Lab 10)
+
+El sistema vive en `agentes/` (ver `agentes/README.md`). Resuelve issues del backend de RutaSIT que tienen una prueba que los reproduce: `issues/ISSUE-01.md` a `ISSUE-03.md` y `tests/test_issue_*.py`. El agente trabaja en una copia (`agentes/trabajo/`), nunca en `main`, y ninguna corrida modifica pruebas. Decisión de arquitectura: `docs/architecture/adr/010-sistema-agentico.md`.
+
+### Máquina de estados
+
+![Máquina de estados del agente](agentes/diseno/estados.png)
+
+Fuente: `agentes/diseno/estados.puml`. Agrega `EsperandoAprobacion` a la máquina del framework: con `--humano consola` cada edición espera un `s` o `n` de un integrante.
+
+### Trayectoria del issue 2 (actor-crítico con aprobación humana)
+
+![Trayectoria del issue 2](agentes/trazas/issue2_coordinado_humano/trayectoria.png)
+
+Generada desde las trazas JSONL con `agentes/agente/traza.py` y mermaid-cli.
+
+### Métricas de las trazas (E7)
+
+| Corrida | Issue | Pasos | Rondas | Rechazadas por contrato | Bloqueadas | Contexto final (car.) |
+|---|---|---|---|---|---|---|
+| Agente único (E2) | 1 | 8 | 1 | 0 | 0 | 10 907 |
+| Agente único | 2 | 7 | 1 | 0 | 0 | 6 759 |
+| Planificador + ejecutor + revisor | 2 | 20 | 2 | 0 | 0 | 30 399 |
+| Agente único | 3 | 9 | 1 | 0 | 1 | 9 391 |
+| Agente único + `mapa_repo` y notas (E4) | 3 | 10 | 1 | 0 | 0 | 13 682 |
+
+Lo que aprendimos:
+- El revisor encontró en el issue 2 un `TypeError` en `consultar_eta()` que el agente único dejó pasar con la prueba del issue en verde. Costó 2,9 veces más pasos y 4,5 veces más contexto, así que el actor-crítico se usa solo cuando el cambio altera un contrato que otros módulos usan.
+- `mapa_repo` no ahorró contexto en un repositorio de 15 módulos (13 682 frente a 9 391 caracteres); una búsqueda precisa fue más barata.
+- La política bloqueó un `python -c` en el issue 3 y la protección de `test/` tuvo que agregarse porque el framework solo protegía `tests/`.
+- Hoy el agente queda en el rol de revisor (`agentes/delegacion.md`).
+
+### Documentos
+
+- `agentes/diseno/lienzo.md`, `agentes/observacion.md`, `agentes/delegacion.md`, `agentes/bitacora-ia.md`, `agentes/cuestionario.md`.

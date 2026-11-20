@@ -71,6 +71,8 @@ class ServicioEta:
             return Estimacion(0, False)
         viaje.posiciones.append(pos)
         minutos = estrategia.estimar(pos, paradero)
+        if minutos is None:                      # p. ej. el bus ya paso el paradero (HU-01)
+            return Estimacion(0, False)
         datos = {"id": viaje.id, "paradero": paradero, "minutos": minutos}
         self.publicador.publicar("eta_calculado", datos)
         if minutos > LIMITE_RETRASO_MIN:

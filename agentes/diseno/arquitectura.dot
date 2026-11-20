@@ -1,0 +1,25 @@
+digraph G {
+  graph [rankdir=TB, fontname="Arial", fontsize=11, bgcolor="white", nodesep=0.35, ranksep=0.55, pad=0.2];
+  node  [shape=box, style="rounded,filled", fontname="Arial", fontsize=10, color="#1A3A5C", fillcolor="#EEF2F8"];
+  edge  [fontname="Arial", fontsize=9, color="#555555"];
+  humano [label="Integrante del grupo\n(revisor humano)", shape=box, fillcolor="#FFF4D6"];
+  issue  [label="issues/ISSUE-0N.md\n+ prueba en rojo", shape=note, fillcolor="#FFFFFF"];
+  subgraph cluster_o { label="orquestador.py (coordinación por gestor)"; color="#9AA9BC"; style="rounded";
+    pl [label="Planificador\nsin herramientas, 2 pasos"];
+    ej [label="Ejecutor (actor)\nleer, buscar, editar, pruebas,\ncomandos permitidos · 12 pasos"];
+    rv [label="Revisor (crítico)\nsolo lectura · 8 pasos"];
+  }
+  pol [label="Política por rol\nlista de comandos · test/ y tests/ protegidas\nmax_pasos · aprobar_edicion", fillcolor="#F4E3DE"];
+  con [label="Contrato\nvalidar_decision()", fillcolor="#F4E3DE"];
+  sb  [label="Sandbox agentes/trabajo/\n(copia de trabajo_original/)", shape=folder, fillcolor="#EAF4EC"];
+  tr  [label="trazas/<corrida>/\nJSONL · diff · resumen · Mermaid", shape=folder, fillcolor="#FFFFFF"];
+  issue -> pl [label="objetivo"];
+  pl -> ej [label="plan"];
+  ej -> rv [label="resumen + diff"];
+  rv -> ej [label="CAMBIOS SOLICITADOS\n(máx. 2 rondas)", style=dashed];
+  ej -> con; rv -> con; con -> pol [label="decisión válida"];
+  pol -> sb [label="acción permitida"];
+  pol -> humano [label="¿editar? s/n", style=dashed];
+  rv -> humano [label="APROBADO →\nPull Request"];
+  sb -> tr [style=dotted, arrowhead=none];
+}
