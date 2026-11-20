@@ -1,0 +1,30 @@
+[
+ {
+  "pensamiento": "Empiezo por el diff para ver exactamente qué cambió el ejecutor.",
+  "accion": "ver_cambios",
+  "args": {}
+ },
+ {
+  "pensamiento": "Confirmo que la prueba del issue pasa y que los fallos restantes no vienen de este cambio.",
+  "accion": "ejecutar_pruebas",
+  "args": {}
+ },
+ {
+  "pensamiento": "El cambio altera el tipo de retorno: antes siempre era int y ahora puede ser None. Busco quién usa minutos_hasta_paradero o EtaPorRecorrido para ver si acepta None.",
+  "accion": "buscar",
+  "args": {
+   "patron": "minutos_hasta_paradero|EtaPorRecorrido|RECORRIDO"
+  }
+ },
+ {
+  "pensamiento": "ServicioEta registra EtaPorRecorrido como estrategia RECORRIDO. Leo servicio.py para ver qué hace consultar_eta con el valor que devuelve la estrategia.",
+  "accion": "leer_archivo",
+  "args": {
+   "ruta": "src/rutasit/servicio.py"
+  }
+ },
+ {
+  "pensamiento": "En consultar_eta, si la estrategia devuelve None, la línea 75 publica 'llega en None min' al pasajero y la línea 76 compara None > 20, que lanza TypeError. La prueba del issue no cubre este camino porque solo prueba la función. Pido cambios.",
+  "final": "CAMBIOS SOLICITADOS. (1) Bloqueante: minutos_hasta_paradero() ahora puede devolver None, pero ServicioEta.consultar_eta() (servicio.py líneas 73-78) usa ese valor sin revisarlo: publica 'llega en None min' al pasajero y luego evalúa None > LIMITE_RETRASO_MIN, que lanza TypeError con la estrategia RECORRIDO. Cuando la estrategia devuelve None, consultar_eta debe responder Estimacion(0, False) (ETA no disponible) sin publicar eta_calculado. (2) El cambio en llegada.py es correcto y mínimo; la prueba del issue pasa y los 6 fallos restantes son de los issues #1 y #3. (3) Falta una prueba de integración para consultar_eta con RECORRIDO; los agentes no pueden escribir en tests/, así que queda para el humano."
+ }
+]

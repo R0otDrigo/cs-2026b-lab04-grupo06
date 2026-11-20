@@ -1,0 +1,32 @@
+{
+ "corrida": "issue2_coordinado_humano",
+ "issue": 2,
+ "modo": "coordinado",
+ "herramientas": "basicas",
+ "humano": "grabado",
+ "rondas": 2,
+ "veredicto": "APROBADO. llegada.py devuelve None cuando el bus ya pasó y consultar_eta() lo traduce a ETA no disponible sin publicar eventos. Pruebas del issue en verde, sin regresiones (los 6 fallos son de los issues #1 y #3). Para el humano: agregar en tests/ una prueba de integración de consultar_eta con la estrategia RECORRIDO y aprobar el Pull Request.",
+ "pruebas_finales": "E       TypeError: 'NoneType' object is not subscriptable\nE       KeyError: 'lat'\nE       KeyError: 'vel_kmh'\nE       TypeError: 'NoneType' object is not subscriptable\nE       assert 1413.3878603462572 < 1.0\nE        +  where 1413.3878603462572 = distancia_a_ruta(Posicion(lat=-16.409, lon=-71.5188, vel_kmh=25.0), [(-16.409, -71.5375), (-16.409, -71.5188), (-16.3909, -71.5188)])\n6 failed, 65 passed, 1 xfailed in 0.07s",
+ "contexto": [
+  {
+   "agente": "planificador",
+   "caracteres": 1190
+  },
+  {
+   "agente": "ejecutor",
+   "caracteres": 7160
+  },
+  {
+   "agente": "revisor",
+   "caracteres": 9642
+  },
+  {
+   "agente": "ejecutor",
+   "caracteres": 8786
+  },
+  {
+   "agente": "revisor",
+   "caracteres": 3621
+  }
+ ]
+}

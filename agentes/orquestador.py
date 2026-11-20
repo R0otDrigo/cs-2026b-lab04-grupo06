@@ -9,6 +9,7 @@ Ejemplos (desde la carpeta agentes/):
   python orquestador.py --issue 1 --modo unico                      # reproduce la trayectoria grabada
   python orquestador.py --issue 3 --modo unico --herramientas extendidas      # E4
   python orquestador.py --issue 2 --modo coordinado                 # E5
+  python orquestador.py --issue 2 --modo coordinado --humano consola          # E6: una persona aprueba
 Cada corrida parte de una copia limpia de trabajo_original/ y deja su traza en trazas/<corrida>/.
 """
 import argparse, json, pathlib, shutil, sys
@@ -20,6 +21,7 @@ from agente.nucleo import Agente                                         # noqa:
 from agente.herramientas import Herramientas                             # noqa: E402
 from agente.modelos import ModeloGrabado, ModeloInteractivo, PROTOCOLO   # noqa: E402
 from agente.politica import Politica                                     # noqa: E402
+from agente.humano import AprobadorConsola, AprobadorGrabado             # noqa: E402
 from agente import traza                                                 # noqa: E402
 
 MAX_RONDAS = 2                       # presupuesto del bucle actor-crítico
@@ -30,6 +32,8 @@ def nombre_corrida(a):
     n = f"issue{a.issue}_{a.modo}"
     if a.herramientas == "extendidas":
         n += "_mapa"
+    if a.humano != "no":
+        n += "_humano"
     return a.corrida or n
 
 
@@ -42,6 +46,7 @@ def main(argv=None):
     ap.add_argument("--issue", type=int, choices=(1, 2, 3), required=True)
     ap.add_argument("--modo", choices=("unico", "coordinado"), default="unico")
     ap.add_argument("--herramientas", choices=("basicas", "extendidas"), default="basicas")
+    ap.add_argument("--humano", choices=("no", "consola", "grabado"), default="no")
     ap.add_argument("--interactivo", action="store_true", help="pedir cada decisión a su asistente de IA y grabarla")
     ap.add_argument("--corrida", help="nombre de la carpeta en trayectorias/ y trazas/")
     a = ap.parse_args(argv)
@@ -60,6 +65,12 @@ def main(argv=None):
     def modelo(nombre):
         archivo = tray_dir / f"{nombre}.json"
         return ModeloInteractivo(str(archivo)) if a.interactivo else ModeloGrabado(archivo)
+
+    aprobador = None
+    if a.humano == "consola":
+        aprobador = AprobadorConsola(grabar_en=tray_dir / "humano.json")
+    elif a.humano == "grabado":
+        aprobador = AprobadorGrabado(tray_dir / "humano.json")
 
     permitidas_ejecutor = set(h.catalogo()) - {"ver_cambios"}
     reglas = ("Reglas: trabaja solo dentro del repositorio; no modifiques test/ ni tests/; corrige la causa "
@@ -82,7 +93,7 @@ def main(argv=None):
                     + (f"Plan:\n{plan}\n" if plan else "") + retro + reglas
                     + f"\nHerramientas:\n{catalogo_de(h, permitidas_ejecutor)}\n{PROTOCOLO}")
         ej = Agente("ejecutor", modelo(f"ejecutor{sufijo}"), h,
-                    Politica(herramientas_permitidas=permitidas_ejecutor, max_pasos=12),
+                    Politica(herramientas_permitidas=permitidas_ejecutor, max_pasos=12, aprobar_edicion=aprobador),
                     objetivo, str(traza_dir / f"ejecutor{sufijo}.jsonl"))
         resumen = ej.ejecutar()
         agentes.append(ej)
@@ -110,7 +121,7 @@ def main(argv=None):
         shutil.copy(trabajo / "notas.md", traza_dir / "notas.md")
     datos = {
         "corrida": corrida, "issue": a.issue, "modo": a.modo, "herramientas": a.herramientas,
-        "humano": "no", "rondas": ronda,
+        "humano": a.humano, "rondas": ronda,
         "veredicto": veredicto, "pruebas_finales": h.ejecutar_pruebas(),
         "contexto": [{"agente": x.nombre, "caracteres": len(json.dumps(x.historial, ensure_ascii=False))}
                      for x in agentes],

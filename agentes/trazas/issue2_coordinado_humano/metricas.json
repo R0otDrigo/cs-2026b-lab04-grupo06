@@ -1,0 +1,34 @@
+{
+ "planificador": {
+  "pasos": 1
+ },
+ "ejecutor": {
+  "pasos": 7,
+  "permitidas": 6,
+  "herr:leer_archivo": 2,
+  "herr:ejecutar_comando": 2,
+  "herr:editar_archivo": 1,
+  "herr:ejecutar_pruebas": 1
+ },
+ "revisor": {
+  "pasos": 5,
+  "permitidas": 4,
+  "herr:ver_cambios": 1,
+  "herr:ejecutar_pruebas": 1,
+  "herr:buscar": 1,
+  "herr:leer_archivo": 1
+ },
+ "ejecutor_r2": {
+  "pasos": 4,
+  "permitidas": 3,
+  "herr:leer_archivo": 1,
+  "herr:editar_archivo": 1,
+  "herr:ejecutar_pruebas": 1
+ },
+ "revisor_r2": {
+  "pasos": 3,
+  "permitidas": 2,
+  "herr:ver_cambios": 1,
+  "herr:ejecutar_pruebas": 1
+ }
+}

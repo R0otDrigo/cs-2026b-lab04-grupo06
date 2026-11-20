@@ -1,0 +1,49 @@
+sequenceDiagram
+    autonumber
+    actor U as Humano
+    participant PL as Planificador
+    participant EJ as Ejecutor (actor)
+    participant RV as Revisor (crítico)
+    participant P as Política
+    participant H as Herramientas
+    U->>PL: objetivo (issue)
+    PL->>EJ: plan
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de ISSUE-02.md
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 1 failed, 2 passed
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de llegada.py
+    EJ->>U: ¿aprobar editar_archivo?
+    U-->>EJ: s
+    EJ->>H: editar_archivo
+    H-->>EJ: OK, archivo modificado
+    EJ->>H: ejecutar_comando
+    H-->>EJ: 3 passed
+    EJ->>H: ejecutar_pruebas
+    H-->>EJ: 6 failed, 65 passed, 1 xfailed
+    EJ->>RV: resumen + diff
+    RV->>H: ver_cambios
+    H-->>RV: diff de 7 líneas
+    RV->>H: ejecutar_pruebas
+    H-->>RV: 6 failed, 65 passed, 1 xfailed
+    RV->>H: buscar
+    H-->>RV: 8 coincidencia(s)
+    RV->>H: leer_archivo
+    H-->>RV: contenido de servicio.py
+    Note over EJ,RV: Ronda 2 del bucle actor-crítico
+    RV->>EJ: cambios solicitados
+    EJ->>H: leer_archivo
+    H-->>EJ: contenido de servicio.py
+    EJ->>U: ¿aprobar editar_archivo?
+    U-->>EJ: s
+    EJ->>H: editar_archivo
+    H-->>EJ: OK, archivo modificado
+    EJ->>H: ejecutar_pruebas
+    H-->>EJ: 6 failed, 65 passed, 1 xfailed
+    EJ->>RV: resumen + diff
+    RV->>H: ver_cambios
+    H-->>RV: diff de 15 líneas
+    RV->>H: ejecutar_pruebas
+    H-->>RV: 6 failed, 65 passed, 1 xfailed
+    RV-->>U: APROBADO
