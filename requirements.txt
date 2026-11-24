@@ -3,3 +3,4 @@ radon
 pylint
 jsonschema
 pyyaml
+mcp>=2
