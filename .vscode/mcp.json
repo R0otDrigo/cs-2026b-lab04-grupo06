@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "rutasit": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${workspaceFolder}/agentes/mcp/servidor_mcp/rutasit_mcp.py"]
+    }
+  }
+}
