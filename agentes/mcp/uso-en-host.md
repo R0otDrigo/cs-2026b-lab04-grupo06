@@ -11,7 +11,7 @@ Host: VS Code con GitHub Copilot en modo agente (configuración en `.vscode/mcp.
   "args": ["${workspaceFolder}/agentes/mcp/servidor_mcp/rutasit_mcp.py"] } } }
 ```
 
-Pasos: seleccionar un entorno Python con las dependencias de `requirements.txt` instaladas, abrir el repositorio en VS Code, abrir `.vscode/mcp.json` y pulsar **Start** sobre `rutasit`; en el chat de Copilot elegir el modo **Agent** y comprobar en el ícono de herramientas que aparecen `buses_en_ruta`, `tiempo_llegada`, `estado_desvio` y `reportar_desvio`. El comando `python` de ambas configuraciones debe resolver a ese entorno. El servidor no usa claves de API ni variables secretas.
+Pasos: seleccionar un entorno Python con las dependencias de `requirements.txt` instaladas, abrir el repositorio en VS Code, abrir `.vscode/mcp.json` y pulsar **Start** sobre `rutasit`; en el chat de Copilot elegir el modo **Agent** y comprobar en el ícono de herramientas que aparecen `buses_en_ruta`, `tiempo_llegada` y `reportar_desvio`. El comando `python` de ambas configuraciones debe resolver a ese entorno. El servidor no usa claves de API ni variables secretas.
 
 ## Las 5 consultas
 

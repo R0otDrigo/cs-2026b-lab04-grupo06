@@ -8,7 +8,7 @@ El servidor publica una sola vez lo que hoy está dentro del backend y del agent
 |---|---|---|---|
 | Buses en servicio de una ruta | Herramienta `buses_en_ruta` | No | Consulta con un parámetro que el modelo elige (la ruta) |
 | Minutos hasta un paradero | Herramienta `tiempo_llegada` | No | Cálculo con parámetros; reutiliza `minutos_hasta_paradero` y la regla "ETA no disponible" |
-| Desvíos según RF-04 | Herramienta `estado_desvio` | No | Verificación por ruta; reutiliza `distancia_a_ruta` y `hay_desvio` |
+| Desvíos según RF-04 | ~~Herramienta `estado_desvio`~~ fusionada en `buses_en_ruta` (E6) | No | Cada bus trae `distancia_ruta_m` y `desviado`; reutiliza `distancia_a_ruta` y `hay_desvio` |
 | Reportar un desvío | Herramienta `reportar_desvio` ★ | Sí, solo crea | Única escritura: crea `reportes/DESVIO-NN.md`; nunca edita ni borra |
 | Mapa de rutas (paraderos por km y trazado) | Recurso `rutasit://rutas` (JSON) | No | Contexto estable; lo decide el host |
 | Reglas aprobadas HU-01, RF-01, RF-04 | Recurso `rutasit://reglas` | No | Contexto estable para no repetir las reglas en cada prompt |
@@ -30,3 +30,7 @@ El servidor publica una sola vez lo que hoy está dentro del backend y del agent
 ## Lo que no se expone
 
 No hay herramientas para cambiar el estado de un viaje, editar rutas o enviar notificaciones a pasajeros. Esas acciones afectan a usuarios reales y quedan fuera del servidor, aunque existan en el dominio (`estados.py`, `NotificadorPasajero`).
+
+## Cambio en E6: catálogo optimizado
+
+La traza de E4 mostró que el agente siempre llamaba a `buses_en_ruta` y luego a `estado_desvio` sobre la misma ruta. En E6 fusionamos las dos: `buses_en_ruta` devuelve ahora `distancia_ruta_m` y `desviado` por bus (y ya no la latitud y longitud, que el agente no usaba), y acortamos las descripciones. El catálogo pasó de 4 a 3 herramientas y de ~1160 a ~808 tokens (−30 %). Detalle en `../protocolo.md`.

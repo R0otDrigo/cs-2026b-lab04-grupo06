@@ -27,7 +27,7 @@ CONSULTA = ("Un pasajero espera en el paradero Plaza de Armas y pregunta en cuá
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--corrida", default="analista_catalogo_v1")
+    ap.add_argument("--corrida", default="analista_catalogo_v2")
     ap.add_argument("--interactivo", action="store_true")
     ap.add_argument("--humano", choices=("consola", "grabado"), default="grabado")
     a = ap.parse_args(argv)

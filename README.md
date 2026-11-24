@@ -325,3 +325,33 @@ Lo que aprendimos:
 ### Documentos
 
 - `agentes/diseno/lienzo.md`, `agentes/observacion.md`, `agentes/delegacion.md`, `agentes/bitacora-ia.md`, `agentes/cuestionario.md`.
+
+## Servidor MCP (Lab 11)
+
+El servidor `rutasit` publica el sistema por Model Context Protocol para que lo usen el agente del Lab 10, VS Code con Copilot o Claude Code sin reescribir herramientas. Usa el SDK oficial (`mcp>=2`), el protocolo 2026-07-28 y transporte stdio. Código y evidencias en `agentes/mcp/` (ver `agentes/mcp/README.md`); decisión en `docs/architecture/adr/011-servidor-mcp.md`.
+
+### Catálogo
+
+| Primitiva | Nombre | Qué hace |
+|---|---|---|
+| Herramienta | `buses_en_ruta(ruta)` | Buses de la ruta con km recorridos, velocidad, distancia al trazado y si está desviado (RF-04) |
+| Herramienta | `tiempo_llegada(ruta, paradero)` | Minutos del próximo bus sobre la ruta (HU-01); "ETA no disponible" si ninguno puede llegar |
+| Herramienta ★ | `reportar_desvio(placa, descripcion)` | Única escritura: crea `agentes/mcp/reportes/DESVIO-NN.md`; nunca modifica ni borra |
+| Recurso | `rutasit://rutas`, `rutasit://reglas`, `rutasit://adr/{numero}` | Mapa de rutas, reglas aprobadas y ADR por número |
+| Prompt | `aviso_usuarios`, `criterios_aceptacion` | Aviso a pasajeros y prompt v5 del Lab 09 |
+
+Los datos de la flota son ficticios (`agentes/mcp/servidor_mcp/flota_demo.py`).
+
+### Conectarlo a un host
+
+- VS Code con Copilot (modo agente): `.vscode/mcp.json` ya está en el repositorio; abrirlo y pulsar **Start** sobre `rutasit`.
+- Claude Code: `.mcp.json` en la raíz, o `claude mcp add rutasit -- python agentes/mcp/servidor_mcp/rutasit_mcp.py`.
+- MCP Inspector: `npx @modelcontextprotocol/inspector python agentes/mcp/servidor_mcp/rutasit_mcp.py`.
+
+El host debe pedir permiso antes de `reportar_desvio`. No hace falta ninguna clave de API. La configuración está incluida; la prueba real de VS Code/Copilot y sus capturas siguen pendientes en `agentes/mcp/uso-en-host.md`.
+
+### Diagrama de secuencia
+
+![Tráfico JSON-RPC del agente](agentes/mcp/trazas/analista_catalogo_v2/mcp_trafico.png)
+
+Generado desde el tráfico real que captura `agentes/mcp/cliente/espia.py`. La consulta tomó 12 mensajes (8 463 bytes); el catálogo optimizado ocupa ~808 tokens, 30 % menos que el inicial (`agentes/mcp/protocolo.md`).
