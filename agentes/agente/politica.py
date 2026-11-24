@@ -21,6 +21,9 @@ class Politica:
     max_pasos: int = 15
     # Humano en el circuito. Antes era un atributo de clase sin tipo y no se podía pasar al constructor.
     aprobar_edicion: Optional[Callable[[dict], bool]] = None
+    # Lab 11: herramientas (por ejemplo, las de escritura de un servidor MCP) que una persona debe aprobar.
+    requieren_aprobacion: set = field(default_factory=set)
+    aprobar: Optional[Callable[[str, dict], bool]] = None
 
     def evaluar(self, accion: str, args: dict, paso: int) -> Decision:
         if paso > self.max_pasos:
@@ -39,4 +42,10 @@ class Politica:
                 if not self.aprobar_edicion(args):
                     return Decision(False, "El revisor humano rechazó la edición", humano="n")
                 return Decision(True, humano="s")
+        if accion in self.requieren_aprobacion:
+            if self.aprobar is None:
+                return Decision(False, f"{accion} requiere aprobación humana y no hay quien apruebe")
+            if not self.aprobar(accion, args):
+                return Decision(False, f"El revisor humano rechazó {accion}", humano="n")
+            return Decision(True, humano="s")
         return Decision(True)

@@ -1,0 +1,29 @@
+{
+ "mensajes": 14,
+ "bytes": 10884,
+ "errores": 1,
+ "latencia_ms": {
+  "server/discover": [
+   1127.4
+  ],
+  "tools/list": [
+   3.4
+  ],
+  "tools/call": [
+   4.5,
+   3.5,
+   2.8,
+   4.2,
+   3.6
+  ]
+ },
+ "tokens_catalogo": {
+  "buses_en_ruta": 314,
+  "tiempo_llegada": 338,
+  "estado_desvio": 281,
+  "reportar_desvio": 227
+ },
+ "tokens_catalogo_total": 1160,
+ "pasos_agente": 6,
+ "contexto_agente_caracteres": 5680
+}

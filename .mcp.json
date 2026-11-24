@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rutasit": {
+      "command": "python",
+      "args": ["agentes/mcp/servidor_mcp/rutasit_mcp.py"]
+    }
+  }
+}

@@ -25,8 +25,18 @@ class AprobadorConsola:
     def __call__(self, args: dict) -> bool:
         self._salida("\n===== EL AGENTE QUIERE EDITAR UN ARCHIVO =====")
         self._salida(_resumen_edicion(args))
+        return self._preguntar()
+
+    def accion(self, accion: str, args: dict) -> bool:
+        """Lab 11: aprobar una herramienta de escritura (por ejemplo, una herramienta MCP)."""
+        self._salida(f"\n===== EL AGENTE QUIERE EJECUTAR {accion} =====")
+        for k, v in args.items():
+            self._salida(f"  {k}: {v}")
+        return self._preguntar(f"¿Aprueba {accion}? [s/n]: ")
+
+    def _preguntar(self, texto="¿Aprueba la edición? [s/n]: ") -> bool:
         while True:
-            r = str(self._entrada("¿Aprueba la edición? [s/n]: ")).strip().lower()
+            r = str(self._entrada(texto)).strip().lower()
             if r in ("s", "n"):
                 break
             self._salida("Respuesta no válida: escriba solo 's' o 'n'.")
@@ -48,3 +58,6 @@ class AprobadorGrabado:
         r = self._respuestas[self._i]
         self._i += 1
         return r == "s"
+
+    def accion(self, accion: str, args: dict) -> bool:
+        return self(args)
