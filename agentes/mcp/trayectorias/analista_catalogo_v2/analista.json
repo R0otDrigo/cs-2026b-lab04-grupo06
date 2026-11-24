@@ -1,0 +1,36 @@
+[
+ {
+  "pensamiento": "La consulta dice 'ruta 7'. Veo los buses de esa ruta; esta herramienta ya trae si cada bus está desviado.",
+  "accion": "buses_en_ruta",
+  "args": {
+   "ruta": "7"
+  }
+ },
+ {
+  "pensamiento": "El servidor espera el código con guion: la ruta 7 es R-07.",
+  "accion": "buses_en_ruta",
+  "args": {
+   "ruta": "R-07"
+  }
+ },
+ {
+  "pensamiento": "V2B-789 está desviado (895,4 m). Antes de reportarlo respondo la parte del pasajero: tiempo de llegada a Plaza de Armas.",
+  "accion": "tiempo_llegada",
+  "args": {
+   "ruta": "R-07",
+   "paradero": "Plaza de Armas"
+  }
+ },
+ {
+  "pensamiento": "Reporto el desvío de V2B-789; es la única escritura y pedirá aprobación.",
+  "accion": "reportar_desvio",
+  "args": {
+   "placa": "V2B-789",
+   "descripcion": "Bus V2B-789 (operador B) de la ruta R-07 con sus dos últimas posiciones fuera del trazado; la última está a 895,4 m, dentro de la curva entre Puente Grau y Plaza de Armas. Detectado con buses_en_ruta (RF-04)."
+  }
+ },
+ {
+  "pensamiento": "Tengo todo lo pedido. Respondo.",
+  "final": "Pasajero en Plaza de Armas (ruta R-07): el próximo bus es V1A-456 y llega en 3 min. Centro de control: el bus V2B-789 está desviado según RF-04 (última posición a 895,4 m del trazado, dentro de la curva); quedó registrado en reportes/DESVIO-01.md con aprobación humana. V1A-123 y V1A-456 siguen sobre la ruta."
+ }
+]

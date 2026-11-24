@@ -6,7 +6,7 @@ from mcp import Client
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "servidor_mcp"))
 import rutasit_mcp as srv                                    # noqa: E402
 
-CATALOGO = ["buses_en_ruta", "tiempo_llegada", "estado_desvio", "reportar_desvio"]
+CATALOGO = ["buses_en_ruta", "tiempo_llegada", "reportar_desvio"]     # E6: estado_desvio se fusionó
 
 
 def correr(coro_fn):
@@ -37,6 +37,12 @@ def test_minimo_privilegio_una_sola_herramienta_de_escritura():
 def test_la_escritura_esta_anotada_como_no_destructiva_ni_idempotente():
     t = next(t for t in herramientas() if t.name == "reportar_desvio")
     assert t.annotations.destructive_hint is False and t.annotations.idempotent_hint is False
+
+
+def test_catalogo_optimizado_cabe_en_900_tokens():
+    tamano = sum(len(json.dumps(t.model_dump(by_alias=True, exclude_none=True, mode="json"), ensure_ascii=False))
+                 for t in herramientas()) // 4
+    assert tamano < 900, f"el catálogo creció a ~{tamano} tokens"
 
 
 def test_todo_parametro_de_texto_tiene_limite_de_longitud():
@@ -72,8 +78,8 @@ def test_errores_de_entrada_explican_como_corregir(herramienta, args, pista):
     assert pista in r.content[0].text
 
 
-def test_estado_desvio_usa_rf04():
-    r = correr(lambda c: c.call_tool("estado_desvio", {"ruta": "R-07"}))
+def test_buses_en_ruta_marca_desvios_con_rf04():
+    r = correr(lambda c: c.call_tool("buses_en_ruta", {"ruta": "R-07"}))
     desviados = [b["placa"] for b in r.structured_content["result"] if b["desviado"]]
     assert desviados == ["V2B-789"]
 
