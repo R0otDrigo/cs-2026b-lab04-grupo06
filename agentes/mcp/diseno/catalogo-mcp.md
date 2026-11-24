@@ -33,4 +33,4 @@ No hay herramientas para cambiar el estado de un viaje, editar rutas o enviar no
 
 ## Cambio en E6: catálogo optimizado
 
-La traza de E4 mostró que el agente siempre llamaba a `buses_en_ruta` y luego a `estado_desvio` sobre la misma ruta. En E6 fusionamos las dos: `buses_en_ruta` devuelve ahora `distancia_ruta_m` y `desviado` por bus (y ya no la latitud y longitud, que el agente no usaba), y acortamos las descripciones. El catálogo pasó de 4 a 3 herramientas y de ~1151 a ~805 tokens (−30 %). Detalle en `../protocolo.md`.
+La traza de E4 mostró que el agente siempre llamaba a `buses_en_ruta` y luego a `estado_desvio` sobre la misma ruta. En E6 fusionamos las dos: `buses_en_ruta` devuelve ahora `distancia_ruta_m` y `desviado` por bus (y ya no la latitud y longitud, que el agente no usaba), y acortamos las descripciones. El catálogo pasó de 4 a 3 herramientas y de ~1160 a ~808 tokens (−30 %). Detalle en `../protocolo.md`.

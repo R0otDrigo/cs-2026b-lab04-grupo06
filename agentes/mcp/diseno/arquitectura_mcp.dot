@@ -1,0 +1,25 @@
+digraph G {
+  graph [rankdir=LR, fontname="Arial", fontsize=11, bgcolor="white", nodesep=0.3, ranksep=0.6, pad=0.2, compound=true];
+  node  [shape=box, style="rounded,filled", fontname="Arial", fontsize=10, color="#1A3A5C", fillcolor="#EEF2F8"];
+  edge  [fontname="Arial", fontsize=9, color="#555555"];
+  subgraph cluster_h { label="Hosts (tienen el LLM)"; color="#9AA9BC"; style="rounded";
+    vs [label="VS Code + Copilot\n(modo agente)"];
+    cc [label="Claude Code"];
+    ag [label="Agente del Lab 10\nanalista_mcp.py\n(HerramientasMCP)"];
+  }
+  esp [label="espia.py\n(registra JSON-RPC)", shape=box, style="rounded,dashed", fillcolor="#FFFFFF"];
+  subgraph cluster_s { label="Servidor MCP rutasit (stdio, protocolo 2026-07-28)"; color="#C8310E"; style="rounded";
+    t [label="Herramientas (las elige el modelo)\nbuses_en_ruta · tiempo_llegada\n★ reportar_desvio (solo crea)", fillcolor="#FDEBE6"];
+    r [label="Recursos (los elige el host)\nrutasit://rutas · rutasit://reglas\nrutasit://adr/{numero}", fillcolor="#EAF4EC"];
+    p [label="Prompts (los elige el usuario)\naviso_usuarios · criterios_aceptacion", fillcolor="#FFF4D6"];
+  }
+  dom [label="Dominio RutaSIT (src/rutasit)\nllegada.py (HU-01) · desvio.py (RF-04)", fillcolor="#FFFFFF"];
+  dat [label="flota_demo.py\n(datos ficticios)", shape=cylinder, fillcolor="#FFFFFF"];
+  rep [label="reportes/DESVIO-NN.md\n(archivo nuevo)", shape=note, fillcolor="#FFFFFF"];
+  vs -> t [label="cliente 1", lhead=cluster_s];
+  cc -> t [label="cliente 2", lhead=cluster_s];
+  ag -> esp [label="cliente 3"];
+  esp -> t [lhead=cluster_s];
+  t -> dom; t -> dat; t -> rep [label="solo con\naprobación humana", style=dashed];
+  r -> dat [style=dotted];
+}

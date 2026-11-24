@@ -20,3 +20,8 @@ jobs:
       - name: Pruebas del agente y reproducción de las 6 corridas grabadas
         working-directory: agentes
         run: python -m pytest -q pruebas_agente
+      - name: Servidor MCP (Lab 11) - contrato, adaptador, auditor y corrida grabada
+        run: python -m pytest -q agentes/mcp/pruebas
+      - name: Auditoría del catálogo propio (falla si hay hallazgos ALTA)
+        working-directory: agentes/mcp
+        run: python cliente/auditar.py servidor_mcp/rutasit_mcp.py
