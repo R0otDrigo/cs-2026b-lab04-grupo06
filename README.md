@@ -348,10 +348,12 @@ Los datos de la flota son ficticios (`agentes/mcp/servidor_mcp/flota_demo.py`).
 - Claude Code: `.mcp.json` en la raíz, o `claude mcp add rutasit -- python agentes/mcp/servidor_mcp/rutasit_mcp.py`.
 - MCP Inspector: `npx @modelcontextprotocol/inspector python agentes/mcp/servidor_mcp/rutasit_mcp.py`.
 
-El host debe pedir permiso antes de `reportar_desvio`. No hace falta ninguna clave de API. La configuración está incluida; la prueba real de VS Code/Copilot y sus capturas siguen pendientes en `agentes/mcp/uso-en-host.md`.
+El host debe pedir permiso antes de `reportar_desvio`. No hace falta ninguna clave de API.
+
+La prueba real E5 en VS Code/Copilot ya está completada. Las cinco consultas, las herramientas elegidas y los permisos están documentados en [agentes/mcp/uso-en-host.md](agentes/mcp/uso-en-host.md). La escritura aprobada creó `agentes/mcp/reportes/DESVIO-01.md`.
 
 ### Diagrama de secuencia
 
 ![Tráfico JSON-RPC del agente](agentes/mcp/trazas/analista_catalogo_v2/mcp_trafico.png)
 
-Generado desde el tráfico real que captura `agentes/mcp/cliente/espia.py`. La consulta tomó 12 mensajes (8 463 bytes); el catálogo optimizado ocupa ~808 tokens, 30 % menos que el inicial (`agentes/mcp/protocolo.md`).
+Generado desde el tráfico real que captura `agentes/mcp/cliente/espia.py`. La consulta tomó 12 mensajes (8 451 bytes); el catálogo optimizado ocupa ~805 tokens, 30 % menos que el inicial (`agentes/mcp/protocolo.md`).

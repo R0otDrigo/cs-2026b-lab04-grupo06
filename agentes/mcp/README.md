@@ -1,8 +1,7 @@
 # Servidor MCP de RutaSIT (Laboratorio 11)
 
 ```text
-pip install -r requirements.txt                          # desde la raíz; incluye mcp>=2
-pip install matplotlib                                  # opcional: regenerar los gráficos de E6
+pip install -r requirements.txt                          # incluye mcp>=2
 cd agentes/mcp
 python -m pytest -q pruebas                              # contrato, adaptador, auditor y corrida grabada (25)
 python cliente/explorar.py                               # host mínimo: descubre y prueba cada primitiva
@@ -26,3 +25,9 @@ npx @modelcontextprotocol/inspector python servidor_mcp/rutasit_mcp.py
 | `terceros/clima_mcp.py` | Servidor envenenado de los recursos del curso. **No conectarlo a un host real.** |
 
 El adaptador `HerramientasMCP` y la política ampliada están en `agentes/agente/` junto al resto del framework del Lab 10.
+
+## Evidencia de uso en VS Code/Copilot (E5)
+
+La prueba real del host está completada. Las cinco consultas, las herramientas elegidas, las respuestas y la aprobación de `reportar_desvio` están registradas en [`uso-en-host.md`](uso-en-host.md). La llamada aprobada creó [`reportes/DESVIO-01.md`](reportes/DESVIO-01.md).
+
+Las capturas reales del MCP Inspector se enlazan desde [`pruebas/inspector.md`](pruebas/inspector.md) y se guardan en `pruebas/img/`. En el catálogo E6, `estado_desvio` se integró en `buses_en_ruta`; por eso la segunda consulta se resolvió con una sola herramienta.
